@@ -132,7 +132,7 @@ const AgentSelector = ({
             zIndex
           }}>
                 {/* Sphere */}
-                <div className={cn("relative rounded-full flex items-center justify-center shadow-2xl transition-all duration-500 overflow-hidden", !agent.imageUrl && "bg-gradient-to-br", !agent.imageUrl && agent.gradient, isSelected ? "w-32 h-32 md:w-32 lg:w-40 md:h-32 lg:h-40" : "w-18 h-18 md:w-20 md:h-20")} style={{
+                <div className={cn("relative rounded-full flex items-center justify-center shadow-2xl transition-all duration-500 overflow-hidden", !agent.imageUrl && "bg-gradient-to-br", !agent.imageUrl && agent.gradient, isSelected ? "w-32 h-32 md:w-32 lg:w-40 md:h-32 lg:h-40" : "w-12 h-12 md:w-20 md:h-20")} style={{
               boxShadow: isSelected ? `0 20px 60px -15px rgba(0,0,0,0.3), inset 0 -10px 30px rgba(0,0,0,0.2), inset 0 10px 30px rgba(255,255,255,0.2)` : `0 10px 30px -10px rgba(0,0,0,0.2), inset 0 -5px 15px rgba(0,0,0,0.15), inset 0 5px 15px rgba(255,255,255,0.15)`
             }}>
                   {agent.imageUrl ? <img src={agent.imageUrl} alt={agent.name} className="w-full h-full object-cover" /> : <>
