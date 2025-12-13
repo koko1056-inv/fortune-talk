@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      fortune_readings: {
+        Row: {
+          agent_emoji: string | null
+          agent_name: string
+          created_at: string
+          duration_seconds: number | null
+          ended_at: string | null
+          id: string
+          started_at: string
+          user_id: string
+        }
+        Insert: {
+          agent_emoji?: string | null
+          agent_name: string
+          created_at?: string
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          started_at?: string
+          user_id: string
+        }
+        Update: {
+          agent_emoji?: string | null
+          agent_name?: string
+          created_at?: string
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          started_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           birth_date: string | null

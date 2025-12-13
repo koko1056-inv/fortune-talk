@@ -3,7 +3,7 @@ import VoiceChat from "@/components/VoiceChat";
 import StarField from "@/components/StarField";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
-import { User, LogIn } from "lucide-react";
+import { User, LogIn, ScrollText } from "lucide-react";
 
 const Index = () => {
   const { user } = useAuth();
@@ -15,7 +15,16 @@ const Index = () => {
       <StarField />
       
       {/* Auth/Profile button */}
-      <div className="absolute top-6 right-6 z-20">
+      <div className="absolute top-6 right-6 z-20 flex items-center gap-3">
+        {user && (
+          <Link
+            to="/history"
+            className="flex items-center gap-2 px-4 py-2 rounded-full glass-surface text-sm text-foreground/80 hover:text-accent transition-colors"
+          >
+            <ScrollText className="w-4 h-4" />
+            <span>履歴</span>
+          </Link>
+        )}
         {user ? (
           <Link
             to="/profile"
