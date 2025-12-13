@@ -96,23 +96,23 @@ const AgentSelector = ({ agents, selectedAgent, onSelect, disabled }: AgentSelec
   return (
     <div className="w-full flex flex-col items-center">
       {/* Header */}
-      <div className="flex items-center justify-between w-full max-w-sm px-4 mb-8">
-        <p className="text-sm text-accent/80 tracking-wide font-display">
+      <div className="flex items-center justify-between w-full max-w-sm px-4 mb-4 md:mb-8">
+        <p className="text-xs md:text-sm text-accent/80 tracking-wide font-display">
           占い師を選んでください
         </p>
         <Link
           to="/settings"
-          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-accent transition-colors"
+          className="flex items-center gap-1 md:gap-1.5 text-xs text-muted-foreground hover:text-accent transition-colors"
         >
-          <Settings className="w-3.5 h-3.5" />
-          設定
+          <Settings className="w-3 h-3 md:w-3.5 md:h-3.5" />
+          <span className="hidden sm:inline">設定</span>
         </Link>
       </div>
 
       {/* Carousel with swipe support */}
       <div 
         ref={containerRef}
-        className="relative w-full h-64 flex items-center justify-center touch-pan-y select-none"
+        className="relative w-full h-48 md:h-64 flex items-center justify-center touch-pan-y select-none"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
@@ -120,17 +120,17 @@ const AgentSelector = ({ agents, selectedAgent, onSelect, disabled }: AgentSelec
         <button
           onClick={() => navigateTo('prev')}
           disabled={disabled}
-          className="absolute left-4 z-20 p-2 rounded-full bg-card/80 backdrop-blur-sm border border-border/50 text-muted-foreground hover:text-foreground hover:bg-card transition-all shadow-sm disabled:opacity-50"
+          className="absolute left-2 md:left-4 z-20 p-1.5 md:p-2 rounded-full bg-card/80 backdrop-blur-sm border border-border/50 text-muted-foreground hover:text-foreground hover:bg-card transition-all shadow-sm disabled:opacity-50"
         >
-          <ChevronLeft className="w-5 h-5" />
+          <ChevronLeft className="w-4 h-4 md:w-5 md:h-5" />
         </button>
 
         <button
           onClick={() => navigateTo('next')}
           disabled={disabled}
-          className="absolute right-4 z-20 p-2 rounded-full bg-card/80 backdrop-blur-sm border border-border/50 text-muted-foreground hover:text-foreground hover:bg-card transition-all shadow-sm disabled:opacity-50"
+          className="absolute right-2 md:right-4 z-20 p-1.5 md:p-2 rounded-full bg-card/80 backdrop-blur-sm border border-border/50 text-muted-foreground hover:text-foreground hover:bg-card transition-all shadow-sm disabled:opacity-50"
         >
-          <ChevronRight className="w-5 h-5" />
+          <ChevronRight className="w-4 h-4 md:w-5 md:h-5" />
         </button>
 
         {/* Spheres container */}
@@ -142,7 +142,7 @@ const AgentSelector = ({ agents, selectedAgent, onSelect, disabled }: AgentSelec
             // Calculate position and scale based on offset
             const absOffset = Math.abs(offset);
             const scale = isSelected ? 1 : Math.max(0.4, 0.7 - absOffset * 0.15);
-            const translateX = offset * 100;
+            const translateX = offset * 80; // Reduced for mobile
             const translateZ = isSelected ? 0 : -100 - absOffset * 50;
             const opacity = isSelected ? 1 : Math.max(0.3, 0.7 - absOffset * 0.2);
             const zIndex = 10 - absOffset;
@@ -169,7 +169,7 @@ const AgentSelector = ({ agents, selectedAgent, onSelect, disabled }: AgentSelec
                     "relative rounded-full flex items-center justify-center shadow-2xl transition-all duration-500 overflow-hidden",
                     !agent.imageUrl && "bg-gradient-to-br",
                     !agent.imageUrl && agent.gradient,
-                    isSelected ? "w-32 h-32 md:w-40 md:h-40" : "w-20 h-20 md:w-24 md:h-24"
+                    isSelected ? "w-24 h-24 md:w-32 lg:w-40 md:h-32 lg:h-40" : "w-14 h-14 md:w-20 md:h-20"
                   )}
                   style={{
                     boxShadow: isSelected 
@@ -189,7 +189,7 @@ const AgentSelector = ({ agents, selectedAgent, onSelect, disabled }: AgentSelec
                       <div 
                         className={cn(
                           "absolute top-2 left-1/4 rounded-full bg-white/30 blur-sm",
-                          isSelected ? "w-8 h-8" : "w-4 h-4"
+                          isSelected ? "w-6 h-6 md:w-8 md:h-8" : "w-3 h-3 md:w-4 md:h-4"
                         )}
                       />
                       
@@ -197,7 +197,7 @@ const AgentSelector = ({ agents, selectedAgent, onSelect, disabled }: AgentSelec
                       <span 
                         className={cn(
                           "drop-shadow-lg transition-all duration-500",
-                          isSelected ? "text-5xl md:text-6xl" : "text-2xl md:text-3xl"
+                          isSelected ? "text-4xl md:text-5xl lg:text-6xl" : "text-xl md:text-2xl lg:text-3xl"
                         )}
                       >
                         {agent.emoji}
@@ -207,23 +207,23 @@ const AgentSelector = ({ agents, selectedAgent, onSelect, disabled }: AgentSelec
 
                   {/* Not configured badge */}
                   {!hasAgentId && (
-                    <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center shadow-lg">
-                      <AlertCircle className="w-4 h-4 text-white" />
+                    <div className="absolute -top-1 -right-1 w-5 h-5 md:w-6 md:h-6 rounded-full bg-amber-500 flex items-center justify-center shadow-lg">
+                      <AlertCircle className="w-3 h-3 md:w-4 md:h-4 text-white" />
                     </div>
                   )}
                 </div>
 
                 {/* Agent info - only show for selected */}
                 {isSelected && (
-                  <div className="mt-6 text-center animate-fade-in">
-                    <h3 className="text-xl font-bold text-foreground">
+                  <div className="mt-3 md:mt-6 text-center animate-fade-in">
+                    <h3 className="text-base md:text-xl font-bold text-foreground">
                       {agent.name}
                     </h3>
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <p className="text-xs md:text-sm text-muted-foreground mt-0.5 md:mt-1 max-w-[200px] md:max-w-none">
                       {agent.description}
                     </p>
                     {!hasAgentId && (
-                      <p className="text-xs text-amber-500 mt-2 flex items-center justify-center gap-1">
+                      <p className="text-xs text-amber-500 mt-1 md:mt-2 flex items-center justify-center gap-1">
                         <AlertCircle className="w-3 h-3" />
                         Agent ID未設定
                       </p>
@@ -237,16 +237,16 @@ const AgentSelector = ({ agents, selectedAgent, onSelect, disabled }: AgentSelec
       </div>
 
       {/* Dots indicator */}
-      <div className="flex items-center gap-2 mt-4">
+      <div className="flex items-center gap-1.5 md:gap-2 mt-2 md:mt-4">
         {agents.map((agent, index) => (
           <button
             key={agent.id}
             onClick={() => agent.agentId.trim().length > 0 && onSelect(agent)}
             disabled={disabled || agent.agentId.trim().length === 0}
             className={cn(
-              "w-2 h-2 rounded-full transition-all duration-300",
+              "w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-all duration-300",
               index === selectedIndex
-                ? "w-6 bg-primary"
+                ? "w-4 md:w-6 bg-primary"
                 : agent.agentId.trim().length > 0
                   ? "bg-muted-foreground/30 hover:bg-muted-foreground/50"
                   : "bg-muted-foreground/20"
@@ -255,8 +255,8 @@ const AgentSelector = ({ agents, selectedAgent, onSelect, disabled }: AgentSelec
         ))}
       </div>
 
-      {/* Swipe hint */}
-      <p className="text-xs text-accent/40 mt-4 tracking-wider">
+      {/* Swipe hint - hide on desktop */}
+      <p className="text-[10px] md:text-xs text-accent/40 mt-2 md:mt-4 tracking-wider md:hidden">
         ✧ 左右にスワイプして選択 ✧
       </p>
     </div>
