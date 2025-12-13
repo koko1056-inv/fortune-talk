@@ -254,6 +254,19 @@
   animation: ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
 
+@keyframes pulse-subtle {
+  0%, 100% {
+    box-shadow: 0 0 40px hsl(280 60% 50% / 0.3), inset 0 1px 0 hsl(280 50% 60% / 0.2), 0 10px 30px -10px hsl(260 50% 5% / 0.5);
+  }
+  50% {
+    box-shadow: 0 0 50px hsl(280 60% 50% / 0.5), inset 0 1px 0 hsl(280 50% 60% / 0.3), 0 10px 30px -10px hsl(260 50% 5% / 0.5);
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s ease-in-out infinite;
+}
+
 .animate-wave {
   animation: wave 1s ease-in-out infinite;
 }
