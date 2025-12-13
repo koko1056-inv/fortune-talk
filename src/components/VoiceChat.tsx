@@ -158,7 +158,7 @@ const VoiceChat = () => {
   const isConnected = conversation.status === "connected";
 
   return (
-    <div className="flex flex-col items-center gap-10 w-full">
+    <div className="flex flex-col items-center gap-6 md:gap-10 w-full">
       {/* Agent Selector - hide when connected */}
       {!isConnected && (
         <AgentSelector
@@ -174,7 +174,7 @@ const VoiceChat = () => {
         <div className="text-center animate-fade-in">
           <div 
             className={cn(
-              "w-24 h-24 rounded-full mx-auto mb-4 flex items-center justify-center text-5xl",
+              "w-20 h-20 md:w-24 md:h-24 rounded-full mx-auto mb-3 md:mb-4 flex items-center justify-center text-4xl md:text-5xl",
               "bg-gradient-to-br shadow-crystal animate-float-slow",
               selectedAgent.gradient
             )}
@@ -184,15 +184,15 @@ const VoiceChat = () => {
           >
             <span className="drop-shadow-lg">{selectedAgent.emoji}</span>
           </div>
-          <h2 className="text-2xl font-display font-bold text-gradient tracking-wide">
+          <h2 className="text-xl md:text-2xl font-display font-bold text-gradient tracking-wide">
             {selectedAgent.name}
           </h2>
-          <p className="text-sm text-muted-foreground mt-2 tracking-wide">
+          <p className="text-xs md:text-sm text-muted-foreground mt-1 md:mt-2 tracking-wide">
             {selectedAgent.description}
           </p>
           {/* Show user info during session */}
           {profile?.display_name && (
-            <p className="text-xs text-accent/70 mt-3">
+            <p className="text-[10px] md:text-xs text-accent/70 mt-2 md:mt-3">
               ✧ {profile.display_name}さんの鑑定中 ✧
             </p>
           )}
@@ -201,8 +201,9 @@ const VoiceChat = () => {
 
       {/* Profile hint when not logged in */}
       {!isConnected && !user && (
-        <p className="text-xs text-muted-foreground/60 text-center">
-          💡 ログインしてプロフィールを登録すると、<br />
+        <p className="text-[10px] md:text-xs text-muted-foreground/60 text-center px-4">
+          💡 ログインしてプロフィールを登録すると、
+          <br className="md:hidden" />
           パーソナライズされた占いを受けられます
         </p>
       )}

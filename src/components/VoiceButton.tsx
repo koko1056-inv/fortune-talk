@@ -35,7 +35,7 @@ const VoiceButton = ({ isConnected, isConnecting, isSpeaking, onClick }: VoiceBu
       
       {/* Crystal ball base glow */}
       <div className={cn(
-        "absolute h-36 w-36 rounded-full transition-all duration-500",
+        "absolute h-28 w-28 md:h-36 md:w-36 rounded-full transition-all duration-500",
         isConnected 
           ? "bg-gradient-radial from-primary/30 via-primary/10 to-transparent blur-xl" 
           : "bg-gradient-radial from-accent/20 via-primary/10 to-transparent blur-lg animate-pulse"
@@ -47,7 +47,7 @@ const VoiceButton = ({ isConnected, isConnecting, isSpeaking, onClick }: VoiceBu
         disabled={isConnecting}
         aria-label={isConnected ? "占いを終了する" : "占いを始める"}
         className={cn(
-          "relative z-10 flex h-32 w-32 items-center justify-center rounded-full transition-all duration-500",
+          "relative z-10 flex h-24 w-24 md:h-32 md:w-32 items-center justify-center rounded-full transition-all duration-500",
           "focus:outline-none focus-visible:ring-4 focus-visible:ring-accent/50",
           isConnected
             ? "animate-crystal-glow hover:scale-105 active:scale-95"
@@ -65,15 +65,15 @@ const VoiceButton = ({ isConnected, isConnecting, isSpeaking, onClick }: VoiceBu
         }}
       >
         {/* Crystal ball shine */}
-        <div className="absolute top-4 left-6 w-7 h-7 rounded-full bg-white/30 blur-sm" />
-        <div className="absolute top-6 left-9 w-2.5 h-2.5 rounded-full bg-white/60" />
+        <div className="absolute top-3 md:top-4 left-5 md:left-6 w-5 h-5 md:w-7 md:h-7 rounded-full bg-white/30 blur-sm" />
+        <div className="absolute top-5 md:top-6 left-7 md:left-9 w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-white/60" />
         
         {/* Inner content */}
         {isConnecting ? (
-          <Loader2 className="h-12 w-12 text-accent animate-spin" />
+          <Loader2 className="h-10 w-10 md:h-12 md:w-12 text-accent animate-spin" />
         ) : (
           <span className={cn(
-            "text-6xl transition-all duration-500 drop-shadow-[0_0_20px_hsl(280_60%_60%/0.5)]",
+            "text-5xl md:text-6xl transition-all duration-500 drop-shadow-[0_0_20px_hsl(280_60%_60%/0.5)]",
             isConnected ? "animate-float" : ""
           )}>
             🔮
@@ -81,11 +81,11 @@ const VoiceButton = ({ isConnected, isConnecting, isSpeaking, onClick }: VoiceBu
         )}
         
         {/* Bottom reflection */}
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 w-18 h-4 rounded-full bg-gradient-to-t from-white/15 to-transparent blur-sm" />
+        <div className="absolute bottom-2 md:bottom-3 left-1/2 -translate-x-1/2 w-14 md:w-18 h-3 md:h-4 rounded-full bg-gradient-to-t from-white/15 to-transparent blur-sm" />
       </button>
       
       {/* Crystal ball stand */}
-      <div className="absolute -bottom-5 w-24 h-7 rounded-full bg-gradient-to-b from-amber-900/60 via-amber-800/40 to-amber-900/60 blur-[1px]"
+      <div className="absolute -bottom-4 md:-bottom-5 w-20 md:w-24 h-5 md:h-7 rounded-full bg-gradient-to-b from-amber-900/60 via-amber-800/40 to-amber-900/60 blur-[1px]"
         style={{
           boxShadow: '0 4px 15px -5px hsl(30 50% 20% / 0.5), inset 0 2px 4px hsl(45 50% 40% / 0.2)'
         }}
@@ -93,8 +93,8 @@ const VoiceButton = ({ isConnected, isConnecting, isSpeaking, onClick }: VoiceBu
       
       {/* Call to action text when not connected */}
       {!isConnected && !isConnecting && (
-        <div className="absolute -bottom-16 flex flex-col items-center animate-fade-in">
-          <span className="text-xs text-accent/70 tracking-widest uppercase mb-1">タップして開始</span>
+        <div className="absolute -bottom-12 md:-bottom-16 flex flex-col items-center animate-fade-in">
+          <span className="text-[10px] md:text-xs text-accent/70 tracking-widest uppercase mb-1">タップして開始</span>
           <div className="flex items-center gap-1">
             <span className="w-1 h-1 rounded-full bg-accent/50 animate-bounce" style={{ animationDelay: '0s' }} />
             <span className="w-1 h-1 rounded-full bg-accent/50 animate-bounce" style={{ animationDelay: '0.2s' }} />
