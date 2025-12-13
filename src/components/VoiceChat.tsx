@@ -1,5 +1,5 @@
 import { useConversation } from "@elevenlabs/react";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import VoiceButton from "./VoiceButton";
@@ -9,13 +9,17 @@ import AgentSelector, { Agent } from "./AgentSelector";
 import { useAgentConfig } from "@/hooks/useAgentConfig";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
+import { useFortuneHistory } from "@/hooks/useFortuneHistory";
 
 const VoiceChat = () => {
   const { agents } = useAgentConfig();
   const { user } = useAuth();
   const { profile } = useProfile();
+  const { saveReading } = useFortuneHistory();
   const [isConnecting, setIsConnecting] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<Agent>(agents[0]);
+  const sessionStartRef = useRef<Date | null>(null);
+  const currentAgentRef = useRef<Agent | null>(null);
 
   // Update selected agent when agents change (e.g., after settings update)
   useEffect(() => {
@@ -57,6 +61,10 @@ const VoiceChat = () => {
   const conversation = useConversation({
     onConnect: () => {
       console.log("Connected to agent");
+      // Record session start time
+      sessionStartRef.current = new Date();
+      currentAgentRef.current = selectedAgent;
+      
       const profileInfo = profile?.display_name 
         ? `${profile.display_name}さん、${selectedAgent.name}と接続しました`
         : `${selectedAgent.name}と接続しました`;
@@ -66,6 +74,20 @@ const VoiceChat = () => {
     },
     onDisconnect: () => {
       console.log("Disconnected from agent");
+      
+      // Save reading history if user is logged in
+      if (user && sessionStartRef.current && currentAgentRef.current) {
+        const endTime = new Date();
+        saveReading(
+          currentAgentRef.current.name,
+          currentAgentRef.current.emoji,
+          sessionStartRef.current,
+          endTime
+        );
+        sessionStartRef.current = null;
+        currentAgentRef.current = null;
+      }
+      
       toast.info("鑑定を終了しました");
     },
     onError: (error) => {
