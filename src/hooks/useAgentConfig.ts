@@ -77,7 +77,7 @@ const mapDbToConfig = (db: DbAgentConfig): AgentConfig => ({
 
 export const useAgentConfig = () => {
   const { user } = useAuth();
-  const [agents, setAgents] = useState<AgentConfig[]>(DEFAULT_AGENTS);
+  const [agents, setAgents] = useState<AgentConfig[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -92,6 +92,7 @@ export const useAgentConfig = () => {
 
         if (error) {
           console.error("Failed to fetch agent configs:", error);
+          setAgents(DEFAULT_AGENTS);
           return;
         }
 

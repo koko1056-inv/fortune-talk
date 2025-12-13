@@ -12,22 +12,33 @@ import { useAuth } from "@/hooks/useAuth";
 import { useFortuneHistory } from "@/hooks/useFortuneHistory";
 
 const VoiceChat = () => {
-  const { agents } = useAgentConfig();
+  const { agents, loading: agentsLoading } = useAgentConfig();
   const { user } = useAuth();
   const { profile } = useProfile();
   const { saveReading } = useFortuneHistory();
   const [isConnecting, setIsConnecting] = useState(false);
-  const [selectedAgent, setSelectedAgent] = useState<Agent>(agents[0]);
+  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const sessionStartRef = useRef<Date | null>(null);
   const currentAgentRef = useRef<Agent | null>(null);
 
+  // Set initial selected agent when agents are loaded
+  useEffect(() => {
+    if (agents.length > 0 && !selectedAgent) {
+      // Find first agent with an agentId, or fall back to first agent
+      const firstAvailable = agents.find(a => a.agentId.trim().length > 0) || agents[0];
+      setSelectedAgent(firstAvailable);
+    }
+  }, [agents, selectedAgent]);
+
   // Update selected agent when agents change (e.g., after settings update)
   useEffect(() => {
-    const updated = agents.find((a) => a.id === selectedAgent.id);
-    if (updated) {
-      setSelectedAgent(updated);
+    if (selectedAgent) {
+      const updated = agents.find((a) => a.id === selectedAgent.id);
+      if (updated) {
+        setSelectedAgent(updated);
+      }
     }
-  }, [agents, selectedAgent.id]);
+  }, [agents, selectedAgent]);
 
   // Build dynamic prompt with user profile
   const buildDynamicPrompt = useCallback(() => {
@@ -156,6 +167,26 @@ const VoiceChat = () => {
   };
 
   const isConnected = conversation.status === "connected";
+
+  // Show loading skeleton while agents are being fetched
+  if (agentsLoading || !selectedAgent) {
+    return (
+      <div className="flex flex-col items-center gap-6 md:gap-10 w-full">
+        <div className="w-full flex flex-col items-center">
+          <div className="relative w-full h-48 md:h-64 flex items-center justify-center">
+            <div className="w-24 h-24 md:w-32 lg:w-40 md:h-32 lg:h-40 rounded-full bg-muted/30 animate-pulse" />
+          </div>
+          <div className="flex items-center gap-1.5 md:gap-2 mt-2 md:mt-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-muted/30" />
+            ))}
+          </div>
+        </div>
+        <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-muted/30 animate-pulse" />
+        <div className="h-4 w-24 bg-muted/30 rounded animate-pulse" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center gap-6 md:gap-10 w-full">
