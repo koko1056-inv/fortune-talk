@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import { useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface AgentConfig {
@@ -63,8 +64,6 @@ const DEFAULT_AGENTS: AgentConfig[] = [
   },
 ];
 
-const STORAGE_KEY = "fortune-ai-agents";
-
 const mapDbToConfig = (db: DbAgentConfig): AgentConfig => ({
   id: db.id,
   agentId: db.agent_id,
@@ -76,109 +75,81 @@ const mapDbToConfig = (db: DbAgentConfig): AgentConfig => ({
   accentColor: db.accent_color,
 });
 
+const fetchAgentsFromDb = async (): Promise<AgentConfig[]> => {
+  const { data, error } = await supabase
+    .from("agent_configs")
+    .select("*")
+    .order("sort_order", { ascending: true });
+
+  if (error) {
+    console.error("Failed to fetch agent configs:", error);
+    return DEFAULT_AGENTS;
+  }
+
+  if (data && data.length > 0) {
+    return data.map(mapDbToConfig);
+  }
+
+  return DEFAULT_AGENTS;
+};
+
 export const useAgentConfig = () => {
-  const [agents, setAgents] = useState<AgentConfig[]>(() => {
-    if (typeof window === "undefined") return [];
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        return JSON.parse(stored) as AgentConfig[];
-      } catch {
-        return [];
-      }
-    }
-    return [];
+  const queryClient = useQueryClient();
+
+  const { data: agents = [], isLoading: loading } = useQuery({
+    queryKey: ["agent-configs"],
+    queryFn: fetchAgentsFromDb,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
   });
-  const [loading, setLoading] = useState(true);
 
-  // Fetch agents from database
-  useEffect(() => {
-    const fetchAgents = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("agent_configs")
-          .select("*")
-          .order("sort_order", { ascending: true });
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<AgentConfig> }) => {
+      const dbUpdates: Partial<DbAgentConfig> = {};
+      if (updates.agentId !== undefined) dbUpdates.agent_id = updates.agentId;
+      if (updates.name !== undefined) dbUpdates.name = updates.name;
+      if (updates.description !== undefined) dbUpdates.description = updates.description;
+      if (updates.emoji !== undefined) dbUpdates.emoji = updates.emoji;
+      if (updates.imageUrl !== undefined) dbUpdates.image_url = updates.imageUrl ?? null;
+      if (updates.gradient !== undefined) dbUpdates.gradient = updates.gradient;
+      if (updates.accentColor !== undefined) dbUpdates.accent_color = updates.accentColor;
 
-        if (error) {
-          console.error("Failed to fetch agent configs:", error);
-          if (agents.length === 0) {
-            setAgents(DEFAULT_AGENTS);
-            if (typeof window !== "undefined") {
-              localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_AGENTS));
-            }
-          }
-          return;
-        }
-
-        if (data && data.length > 0) {
-          const mapped = data.map(mapDbToConfig);
-          setAgents(mapped);
-          if (typeof window !== "undefined") {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(mapped));
-          }
-        } else if (agents.length === 0) {
-          setAgents(DEFAULT_AGENTS);
-        }
-      } catch (err) {
-        console.error("Error fetching agent configs:", err);
-        if (agents.length === 0) {
-          setAgents(DEFAULT_AGENTS);
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAgents();
-  }, []);
-
-  const updateAgent = useCallback(async (id: string, updates: Partial<AgentConfig>) => {
-    // Optimistic update
-    setAgents((prev) => {
-      const next = prev.map((agent) =>
-        agent.id === id ? { ...agent, ...updates } : agent
-      );
-      if (typeof window !== "undefined") {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      }
-      return next;
-    });
-
-    // Prepare database update
-    const dbUpdates: Partial<DbAgentConfig> = {};
-    if (updates.agentId !== undefined) dbUpdates.agent_id = updates.agentId;
-    if (updates.name !== undefined) dbUpdates.name = updates.name;
-    if (updates.description !== undefined) dbUpdates.description = updates.description;
-    if (updates.emoji !== undefined) dbUpdates.emoji = updates.emoji;
-    if (updates.imageUrl !== undefined) dbUpdates.image_url = updates.imageUrl ?? null;
-    if (updates.gradient !== undefined) dbUpdates.gradient = updates.gradient;
-    if (updates.accentColor !== undefined) dbUpdates.accent_color = updates.accentColor;
-
-    const { error } = await supabase
-      .from("agent_configs")
-      .update(dbUpdates)
-      .eq("id", id);
-
-    if (error) {
-      console.error("Failed to update agent config:", error);
-      // Revert on error - refetch from database
-      const { data } = await supabase
+      const { error } = await supabase
         .from("agent_configs")
-        .select("*")
-        .order("sort_order", { ascending: true });
-      if (data) {
-        const mapped = data.map(mapDbToConfig);
-        setAgents(mapped);
-        if (typeof window !== "undefined") {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(mapped));
-        }
+        .update(dbUpdates)
+        .eq("id", id);
+
+      if (error) throw error;
+      return { id, updates };
+    },
+    onMutate: async ({ id, updates }) => {
+      await queryClient.cancelQueries({ queryKey: ["agent-configs"] });
+      const previousAgents = queryClient.getQueryData<AgentConfig[]>(["agent-configs"]);
+      
+      queryClient.setQueryData<AgentConfig[]>(["agent-configs"], (old) =>
+        old?.map((agent) => (agent.id === id ? { ...agent, ...updates } : agent)) ?? []
+      );
+      
+      return { previousAgents };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousAgents) {
+        queryClient.setQueryData(["agent-configs"], context.previousAgents);
       }
-    }
-  }, []);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["agent-configs"] });
+    },
+  });
+
+  const updateAgent = useCallback(
+    async (id: string, updates: Partial<AgentConfig>) => {
+      await updateMutation.mutateAsync({ id, updates });
+    },
+    [updateMutation]
+  );
 
   const resetToDefaults = useCallback(async () => {
-    // Reset in database
     for (const agent of DEFAULT_AGENTS) {
       await supabase
         .from("agent_configs")
@@ -194,11 +165,8 @@ export const useAgentConfig = () => {
         .eq("id", agent.id);
     }
     
-    setAgents(DEFAULT_AGENTS);
-    if (typeof window !== "undefined") {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_AGENTS));
-    }
-  }, []);
+    queryClient.setQueryData(["agent-configs"], DEFAULT_AGENTS);
+  }, [queryClient]);
 
   return { agents, updateAgent, resetToDefaults, loading };
 };
