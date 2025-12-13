@@ -65,7 +65,7 @@ const History = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background font-display">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border/30">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-4">
