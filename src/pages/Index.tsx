@@ -1,13 +1,16 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import VoiceChat from "@/components/VoiceChat";
+import TextChat from "@/components/TextChat";
+import ChatModeToggle, { ChatMode } from "@/components/ChatModeToggle";
 import StarField from "@/components/StarField";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { User, LogIn, ScrollText } from "lucide-react";
+
 const Index = () => {
-  const {
-    user
-  } = useAuth();
+  const { user } = useAuth();
+  const [chatMode, setChatMode] = useState<ChatMode>("voice");
   const {
     profile
   } = useProfile();
@@ -74,9 +77,14 @@ const Index = () => {
             </p>}
         </header>
 
-        {/* Voice Chat Interface */}
+        {/* Mode Toggle */}
+        <div className="mb-6 md:mb-8">
+          <ChatModeToggle mode={chatMode} onChange={setChatMode} />
+        </div>
+
+        {/* Chat Interface */}
         <main className="w-full">
-          <VoiceChat />
+          {chatMode === "voice" ? <VoiceChat /> : <TextChat />}
         </main>
 
         {/* Footer - smaller on mobile */}
