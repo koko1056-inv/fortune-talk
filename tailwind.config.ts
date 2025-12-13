@@ -14,7 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+        sans: ['Noto Sans JP', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+        display: ['Cinzel', 'serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -60,6 +61,13 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        // Fortune theme colors
+        mystical: {
+          purple: "hsl(280 70% 50%)",
+          "purple-dark": "hsl(280 60% 30%)",
+          gold: "hsl(45 80% 55%)",
+          "gold-light": "hsl(45 90% 70%)",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -70,8 +78,9 @@ export default {
       },
       boxShadow: {
         soft: "var(--shadow-soft)",
-        glow: "var(--shadow-glow)",
-        button: "var(--shadow-button)",
+        glow: "var(--shadow-mystical)",
+        "glow-gold": "var(--shadow-gold)",
+        crystal: "var(--shadow-crystal)",
       },
       keyframes: {
         "accordion-down": {

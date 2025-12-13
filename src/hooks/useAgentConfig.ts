@@ -6,51 +6,51 @@ export interface AgentConfig {
   name: string;
   description: string;
   emoji: string;
-  imageUrl?: string; // Optional custom image URL (base64 or URL)
+  imageUrl?: string;
   gradient: string;
   accentColor: string;
 }
 
 const DEFAULT_AGENTS: AgentConfig[] = [
   {
-    id: "steve",
+    id: "tarot",
     agentId: "agent_3101kc38wn6qftar7macxcm8rg7g",
-    name: "スティーブ",
-    description: "ビジョナリーな起業家",
-    emoji: "🍎",
-    gradient: "from-zinc-800 via-zinc-700 to-zinc-900",
-    accentColor: "211 100% 50%",
+    name: "神秘のタロット",
+    description: "カードが導く運命の物語",
+    emoji: "🔮",
+    gradient: "from-violet-600 via-purple-600 to-indigo-700",
+    accentColor: "280 70% 50%",
   },
   {
-    id: "sophia",
+    id: "astro",
     agentId: "",
-    name: "ソフィア",
-    description: "クリエイティブディレクター",
-    emoji: "🎨",
-    gradient: "from-rose-500 via-pink-500 to-fuchsia-500",
-    accentColor: "340 80% 55%",
+    name: "星読みの賢者",
+    description: "天体が語る宇宙の知恵",
+    emoji: "⭐",
+    gradient: "from-amber-500 via-yellow-500 to-orange-500",
+    accentColor: "45 80% 55%",
   },
   {
-    id: "alex",
+    id: "eastern",
     agentId: "",
-    name: "アレックス",
-    description: "テクニカルアドバイザー",
-    emoji: "💻",
-    gradient: "from-blue-500 via-indigo-500 to-violet-500",
-    accentColor: "230 80% 55%",
+    name: "東洋の占術師",
+    description: "四柱推命・易の深淵なる教え",
+    emoji: "🌙",
+    gradient: "from-rose-600 via-red-600 to-pink-600",
+    accentColor: "350 70% 50%",
   },
   {
-    id: "maya",
+    id: "oracle",
     agentId: "",
-    name: "マヤ",
-    description: "ウェルネスコーチ",
-    emoji: "🧘",
-    gradient: "from-emerald-400 via-teal-500 to-cyan-500",
-    accentColor: "165 70% 45%",
+    name: "神託の巫女",
+    description: "神々の声を聴く者",
+    emoji: "✨",
+    gradient: "from-cyan-500 via-teal-500 to-emerald-500",
+    accentColor: "175 70% 45%",
   },
 ];
 
-const STORAGE_KEY = "voice-ai-agents";
+const STORAGE_KEY = "fortune-ai-agents";
 
 export const useAgentConfig = () => {
   const [agents, setAgents] = useState<AgentConfig[]>(() => {

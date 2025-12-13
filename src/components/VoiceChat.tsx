@@ -1,6 +1,7 @@
 import { useConversation } from "@elevenlabs/react";
 import { useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import VoiceButton from "./VoiceButton";
 import AudioVisualizer from "./AudioVisualizer";
 import StatusIndicator from "./StatusIndicator";
@@ -95,14 +96,21 @@ const VoiceChat = () => {
       {isConnected && (
         <div className="text-center animate-fade-in">
           <div 
-            className={`w-20 h-20 rounded-3xl mx-auto mb-4 flex items-center justify-center bg-gradient-to-br text-4xl shadow-lg ${selectedAgent.gradient}`}
+            className={cn(
+              "w-24 h-24 rounded-full mx-auto mb-4 flex items-center justify-center text-5xl",
+              "bg-gradient-to-br shadow-crystal animate-float-slow",
+              selectedAgent.gradient
+            )}
+            style={{
+              boxShadow: '0 0 40px hsl(280 70% 50% / 0.4), inset 0 0 30px hsl(200 60% 80% / 0.15)'
+            }}
           >
-            <span className="drop-shadow-sm">{selectedAgent.emoji}</span>
+            <span className="drop-shadow-lg">{selectedAgent.emoji}</span>
           </div>
-          <h2 className="text-2xl font-bold text-foreground tracking-tight">
+          <h2 className="text-2xl font-display font-bold text-gradient tracking-wide">
             {selectedAgent.name}
           </h2>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-sm text-muted-foreground mt-2 tracking-wide">
             {selectedAgent.description}
           </p>
         </div>
