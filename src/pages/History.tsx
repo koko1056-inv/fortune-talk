@@ -1,5 +1,6 @@
 import { useFortuneHistory } from "@/hooks/useFortuneHistory";
 import { useAuth } from "@/hooks/useAuth";
+import { useAgentConfig } from "@/hooks/useAgentConfig";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Trash2, Clock, Calendar } from "lucide-react";
@@ -10,7 +11,18 @@ import { toast } from "sonner";
 const History = () => {
   const { user, loading: authLoading } = useAuth();
   const { readings, loading, deleteReading } = useFortuneHistory();
+  const { agents } = useAgentConfig();
   const navigate = useNavigate();
+
+  const getAgentImage = (agentName: string) => {
+    const agent = agents.find((a) => a.name === agentName);
+    return agent?.imageUrl;
+  };
+
+  const getAgentGradient = (agentName: string) => {
+    const agent = agents.find((a) => a.name === agentName);
+    return agent?.gradient || "from-violet-600 via-purple-600 to-indigo-700";
+  };
 
   const formatDuration = (seconds: number | null) => {
     if (!seconds) return "不明";
@@ -96,7 +108,17 @@ const History = () => {
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <span className="text-3xl">{reading.agent_emoji || "🔮"}</span>
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center overflow-hidden bg-gradient-to-br ${getAgentGradient(reading.agent_name)}`}>
+                      {getAgentImage(reading.agent_name) ? (
+                        <img 
+                          src={getAgentImage(reading.agent_name)} 
+                          alt={reading.agent_name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-2xl">{reading.agent_emoji || "🔮"}</span>
+                      )}
+                    </div>
                     <div>
                       <h3 className="font-medium text-foreground">
                         {reading.agent_name}
