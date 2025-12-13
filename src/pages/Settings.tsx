@@ -1,9 +1,12 @@
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { ArrowLeft, RotateCcw, Check, AlertCircle, Upload, X, Image } from "lucide-react";
 import { useAgentConfig } from "@/hooks/useAgentConfig";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+
+const ADMIN_EMAIL = "kokomu.matsuo@starup01.jp";
 
 // Common emoji options for quick selection
 const EMOJI_OPTIONS = [
@@ -14,8 +17,22 @@ const EMOJI_OPTIONS = [
 
 const Settings = () => {
   const { agents, updateAgent, resetToDefaults } = useAgentConfig();
+  const { user, loading } = useAuth();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showIconPicker, setShowIconPicker] = useState<string | null>(null);
+
+  // Redirect non-admin users
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-pulse text-muted-foreground">読み込み中...</div>
+      </div>
+    );
+  }
+
+  if (!user || user.email !== ADMIN_EMAIL) {
+    return <Navigate to="/" replace />;
+  }
 
   const handleSave = () => {
     setEditingId(null);
