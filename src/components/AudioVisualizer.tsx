@@ -15,12 +15,14 @@ const AudioVisualizer = ({ isActive, isSpeaking }: AudioVisualizerProps) => {
       return;
     }
 
+    // Only animate when speaking (audio detected)
+    if (!isSpeaking) {
+      setBars(Array(7).fill(0.3));
+      return;
+    }
+
     const interval = setInterval(() => {
-      if (isSpeaking) {
-        setBars(Array(7).fill(0).map(() => 0.3 + Math.random() * 0.7));
-      } else {
-        setBars(Array(7).fill(0).map(() => 0.2 + Math.random() * 0.3));
-      }
+      setBars(Array(7).fill(0).map(() => 0.3 + Math.random() * 0.7));
     }, 100);
 
     return () => clearInterval(interval);
