@@ -80,18 +80,7 @@ const Index = () => {
         </main>
 
         {/* Footer - smaller on mobile */}
-        <footer className="mt-10 md:mt-16 text-center">
-          <div className="inline-flex items-center gap-2 md:gap-3 text-accent/60 text-sm">
-            <span className="w-8 md:w-12 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
-            <span className="text-base md:text-lg">✧</span>
-            <span className="w-8 md:w-12 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
-          </div>
-          <p className="mt-3 md:mt-4 text-xs md:text-sm text-muted-foreground/60 leading-relaxed">
-            水晶玉に触れて占い師と繋がり、
-            <br />
-            あなたの運命を紐解いていきましょう。
-          </p>
-        </footer>
+        
       </div>
     </div>;
 };
