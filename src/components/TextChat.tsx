@@ -89,6 +89,7 @@ const TextChat = () => {
   }, [profile]);
 
   const conversation = useConversation({
+    // Text-only mode - no audio input/output
     onConnect: () => {
       console.log("Text chat connected to agent");
       sessionStartRef.current = new Date();
@@ -151,9 +152,10 @@ const TextChat = () => {
     try {
       const dynamicPrompt = buildDynamicPrompt();
       
+      // Use text-only mode - no microphone needed
       const sessionOptions: any = {
         agentId: selectedAgent.agentId,
-        connectionType: "webrtc",
+        textOnly: true,
       };
 
       if (dynamicPrompt && profile) {
