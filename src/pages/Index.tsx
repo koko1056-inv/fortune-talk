@@ -4,44 +4,30 @@ import StarField from "@/components/StarField";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { User, LogIn, ScrollText } from "lucide-react";
-
 const Index = () => {
-  const { user } = useAuth();
-  const { profile } = useProfile();
-
-  return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden">
+  const {
+    user
+  } = useAuth();
+  const {
+    profile
+  } = useProfile();
+  return <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden">
       {/* Animated star field background */}
       <StarField />
       
       {/* Auth/Profile button */}
       <div className="absolute top-4 right-4 md:top-6 md:right-6 z-20 flex items-center gap-2 md:gap-3">
-        {user && (
-          <Link
-            to="/history"
-            className="flex items-center gap-1.5 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full glass-surface text-xs md:text-sm text-foreground/80 hover:text-accent transition-colors"
-          >
+        {user && <Link to="/history" className="flex items-center gap-1.5 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full glass-surface text-xs md:text-sm text-foreground/80 hover:text-accent transition-colors">
             <ScrollText className="w-3.5 h-3.5 md:w-4 md:h-4" />
             <span className="hidden sm:inline">履歴</span>
-          </Link>
-        )}
-        {user ? (
-          <Link
-            to="/profile"
-            className="flex items-center gap-1.5 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full glass-surface text-xs md:text-sm text-foreground/80 hover:text-accent transition-colors"
-          >
+          </Link>}
+        {user ? <Link to="/profile" className="flex items-center gap-1.5 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full glass-surface text-xs md:text-sm text-foreground/80 hover:text-accent transition-colors">
             <User className="w-3.5 h-3.5 md:w-4 md:h-4" />
             <span className="hidden sm:inline">{profile?.display_name || "プロフィール"}</span>
-          </Link>
-        ) : (
-          <Link
-            to="/auth"
-            className="flex items-center gap-1.5 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full glass-surface text-xs md:text-sm text-foreground/80 hover:text-accent transition-colors"
-          >
+          </Link> : <Link to="/auth" className="flex items-center gap-1.5 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full glass-surface text-xs md:text-sm text-foreground/80 hover:text-accent transition-colors">
             <LogIn className="w-3.5 h-3.5 md:w-4 md:h-4" />
             <span>ログイン</span>
-          </Link>
-        )}
+          </Link>}
       </div>
       
       {/* Content */}
@@ -50,15 +36,23 @@ const Index = () => {
         <header className="text-center mb-6 md:mb-12">
           {/* Decorative sparkles - smaller on mobile */}
           <div className="relative inline-block mb-2 md:mb-4">
-            <span className="absolute -top-3 -left-6 text-lg md:text-2xl animate-twinkle" style={{ animationDelay: '0s' }}>✦</span>
-            <span className="absolute -top-1 -right-4 md:-right-6 text-base md:text-xl animate-twinkle" style={{ animationDelay: '0.5s' }}>✧</span>
-            <span className="absolute top-4 -left-8 md:-left-10 text-sm md:text-lg animate-twinkle" style={{ animationDelay: '1s' }}>⋆</span>
-            <span className="absolute top-6 -right-6 md:-right-8 text-lg md:text-2xl animate-twinkle" style={{ animationDelay: '1.5s' }}>✦</span>
+            <span className="absolute -top-3 -left-6 text-lg md:text-2xl animate-twinkle" style={{
+            animationDelay: '0s'
+          }}>✦</span>
+            <span className="absolute -top-1 -right-4 md:-right-6 text-base md:text-xl animate-twinkle" style={{
+            animationDelay: '0.5s'
+          }}>✧</span>
+            <span className="absolute top-4 -left-8 md:-left-10 text-sm md:text-lg animate-twinkle" style={{
+            animationDelay: '1s'
+          }}>⋆</span>
+            <span className="absolute top-6 -right-6 md:-right-8 text-lg md:text-2xl animate-twinkle" style={{
+            animationDelay: '1.5s'
+          }}>✦</span>
             
             {/* Main crystal emoji with glow - smaller on mobile */}
             <div className="relative">
               <div className="absolute inset-0 text-5xl md:text-7xl blur-lg opacity-50 animate-pulse">🔮</div>
-              <span className="text-5xl md:text-7xl relative animate-float-slow">🔮</span>
+              
             </div>
           </div>
           
@@ -75,11 +69,9 @@ const Index = () => {
           </p>
           
           {/* User greeting */}
-          {user && profile?.display_name && (
-            <p className="mt-3 md:mt-4 text-xs md:text-sm text-accent/80">
+          {user && profile?.display_name && <p className="mt-3 md:mt-4 text-xs md:text-sm text-accent/80">
               ようこそ、{profile.display_name}さん ✨
-            </p>
-          )}
+            </p>}
         </header>
 
         {/* Voice Chat Interface */}
@@ -101,8 +93,6 @@ const Index = () => {
           </p>
         </footer>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
