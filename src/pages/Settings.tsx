@@ -1,12 +1,10 @@
 import { Link, Navigate } from "react-router-dom";
 import { ArrowLeft, RotateCcw, Check, AlertCircle, Upload, X, Image } from "lucide-react";
 import { useAgentConfig } from "@/hooks/useAgentConfig";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/hooks/useAuth";
-
-const ADMIN_EMAIL = "kokomu.matsuo@starup01.jp";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 // Common emoji options for quick selection
 const EMOJI_OPTIONS = [
@@ -16,13 +14,13 @@ const EMOJI_OPTIONS = [
 ];
 
 const Settings = () => {
-  const { agents, updateAgent, resetToDefaults } = useAgentConfig();
-  const { user, loading } = useAuth();
+  const { agents, updateAgent, resetToDefaults, loading: agentsLoading } = useAgentConfig();
+  const { isAdmin, loading: adminLoading } = useIsAdmin();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showIconPicker, setShowIconPicker] = useState<string | null>(null);
 
-  // Redirect non-admin users
-  if (loading) {
+  // Loading state
+  if (adminLoading || agentsLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-pulse text-muted-foreground">読み込み中...</div>
@@ -30,7 +28,8 @@ const Settings = () => {
     );
   }
 
-  if (!user || user.email !== ADMIN_EMAIL) {
+  // Redirect non-admin users
+  if (!isAdmin) {
     return <Navigate to="/" replace />;
   }
 
@@ -383,9 +382,6 @@ const Settings = () => {
           </ol>
         </div>
       </div>
-
-      {/* アイコンピッカーはクリックで開閉する方式にしているため、
-          画面全体のオーバーレイは使用しません */}
     </div>
   );
 };

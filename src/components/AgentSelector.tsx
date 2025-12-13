@@ -1,11 +1,8 @@
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import { Settings, AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
-import { AgentConfig } from "@/hooks/useAgentConfig";
+import { AgentConfig, useAgentConfig } from "@/hooks/useAgentConfig";
 import { useMemo, useRef, useCallback } from "react";
-import { useAuth } from "@/hooks/useAuth";
-
-const ADMIN_EMAIL = "kokomu.matsuo@starup01.jp";
 
 export type Agent = AgentConfig;
 interface AgentSelectorProps {
@@ -20,8 +17,7 @@ const AgentSelector = ({
   onSelect,
   disabled
 }: AgentSelectorProps) => {
-  const { user } = useAuth();
-  const isAdmin = user?.email === ADMIN_EMAIL;
+  const { isAdmin } = useAgentConfig();
   const selectedIndex = useMemo(() => agents.findIndex(a => a.id === selectedAgent.id), [agents, selectedAgent.id]);
 
   // Swipe handling
