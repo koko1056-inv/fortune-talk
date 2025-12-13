@@ -69,9 +69,15 @@ const VoiceChat = () => {
     return `【相談者のプロフィール情報】\n${parts.join('\n')}\n\nこの情報を参考にして、パーソナライズされた占いを提供してください。`;
   }, [profile]);
 
+  // Reconnection state
+  const reconnectAttemptRef = useRef(0);
+  const maxReconnectAttempts = 3;
+
   const conversation = useConversation({
     onConnect: () => {
       console.log("Connected to agent");
+      // Reset reconnect attempts on successful connection
+      reconnectAttemptRef.current = 0;
       // Record session start time
       sessionStartRef.current = new Date();
       currentAgentRef.current = selectedAgent;
@@ -103,28 +109,52 @@ const VoiceChat = () => {
     },
     onError: (error) => {
       console.error("Error:", error);
-      toast.error("エラーが発生しました", {
-        description: "もう一度お試しください",
-      });
+      
+      // Attempt reconnection for network errors
+      if (reconnectAttemptRef.current < maxReconnectAttempts && selectedAgent) {
+        reconnectAttemptRef.current += 1;
+        toast.warning(`接続が不安定です (再試行 ${reconnectAttemptRef.current}/${maxReconnectAttempts})`, {
+          description: "自動的に再接続を試みています...",
+        });
+        
+        // Delay before reconnect attempt
+        setTimeout(() => {
+          startConversation();
+        }, 1000 * reconnectAttemptRef.current);
+      } else {
+        reconnectAttemptRef.current = 0;
+        toast.error("エラーが発生しました", {
+          description: "もう一度お試しください",
+        });
+      }
     },
   });
 
   const startConversation = useCallback(async () => {
     setIsConnecting(true);
     try {
-      // Request microphone with optimized settings
-      await navigator.mediaDevices.getUserMedia({ 
+      // Request microphone with optimized settings for stability
+      const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
           sampleRate: 16000,
+          channelCount: 1,
         } 
       });
+
+      // Keep track of stream for cleanup
+      const tracks = stream.getTracks();
+      console.log("Microphone tracks:", tracks.map(t => ({ 
+        kind: t.kind, 
+        enabled: t.enabled, 
+        readyState: t.readyState 
+      })));
       
       const dynamicPrompt = buildDynamicPrompt();
       
-      // Build session options with microphone config
+      // Build session options with microphone config for stability
       const sessionOptions: any = {
         agentId: selectedAgent.agentId,
         connectionType: "webrtc",
@@ -132,6 +162,7 @@ const VoiceChat = () => {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
+          channelCount: 1,
         },
       };
 
