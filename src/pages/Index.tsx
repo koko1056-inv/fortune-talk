@@ -77,15 +77,15 @@ const Index = () => {
             </p>}
         </header>
 
-        {/* Mode Toggle */}
-        <div className="mb-6 md:mb-8">
-          <ChatModeToggle mode={chatMode} onChange={setChatMode} />
-        </div>
-
         {/* Chat Interface */}
         <main className="w-full">
           {chatMode === "voice" ? <VoiceChat /> : <TextChat />}
         </main>
+
+        {/* Mode Toggle - below the start button */}
+        <div className="mt-6 md:mt-8">
+          <ChatModeToggle mode={chatMode} onChange={setChatMode} />
+        </div>
 
         {/* Footer - smaller on mobile */}
         
