@@ -112,13 +112,27 @@ const VoiceChat = () => {
   const startConversation = useCallback(async () => {
     setIsConnecting(true);
     try {
-      await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Request microphone with optimized settings
+      await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          sampleRate: 16000,
+        } 
+      });
       
       const dynamicPrompt = buildDynamicPrompt();
       
-      // Build session options
+      // Build session options with microphone config
       const sessionOptions: any = {
         agentId: selectedAgent.agentId,
+        connectionType: "webrtc",
+        microphone: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
       };
 
       // Add dynamic variables if user has profile
