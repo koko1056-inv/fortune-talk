@@ -3,6 +3,10 @@ import { Link } from "react-router-dom";
 import { Settings, AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { AgentConfig } from "@/hooks/useAgentConfig";
 import { useMemo, useRef, useCallback } from "react";
+import { useAuth } from "@/hooks/useAuth";
+
+const ADMIN_EMAIL = "kokomu.matsuo@starup01.jp";
+
 export type Agent = AgentConfig;
 interface AgentSelectorProps {
   agents: Agent[];
@@ -16,6 +20,8 @@ const AgentSelector = ({
   onSelect,
   disabled
 }: AgentSelectorProps) => {
+  const { user } = useAuth();
+  const isAdmin = user?.email === ADMIN_EMAIL;
   const selectedIndex = useMemo(() => agents.findIndex(a => a.id === selectedAgent.id), [agents, selectedAgent.id]);
 
   // Swipe handling
@@ -88,10 +94,12 @@ const AgentSelector = ({
       {/* Header */}
       <div className="flex items-center justify-between w-full max-w-sm px-4 mb-4 md:mb-8">
         
-        <Link to="/settings" className="flex items-center gap-1 md:gap-1.5 text-xs text-muted-foreground hover:text-accent transition-colors">
-          <Settings className="w-3 h-3 md:w-3.5 md:h-3.5" />
-          <span className="hidden sm:inline">設定</span>
-        </Link>
+        {isAdmin && (
+          <Link to="/settings" className="flex items-center gap-1 md:gap-1.5 text-xs text-muted-foreground hover:text-accent transition-colors ml-auto">
+            <Settings className="w-3 h-3 md:w-3.5 md:h-3.5" />
+            <span className="hidden sm:inline">設定</span>
+          </Link>
+        )}
       </div>
 
       {/* Carousel with swipe support */}
