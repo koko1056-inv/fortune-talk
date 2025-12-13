@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "./useAuth";
 
 export interface AgentConfig {
   id: string;
@@ -64,6 +63,8 @@ const DEFAULT_AGENTS: AgentConfig[] = [
   },
 ];
 
+const STORAGE_KEY = "fortune-ai-agents";
+
 const mapDbToConfig = (db: DbAgentConfig): AgentConfig => ({
   id: db.id,
   agentId: db.agent_id,
@@ -76,10 +77,19 @@ const mapDbToConfig = (db: DbAgentConfig): AgentConfig => ({
 });
 
 export const useAgentConfig = () => {
-  const { user } = useAuth();
-  const [agents, setAgents] = useState<AgentConfig[]>([]);
+  const [agents, setAgents] = useState<AgentConfig[]>(() => {
+    if (typeof window === "undefined") return [];
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      try {
+        return JSON.parse(stored) as AgentConfig[];
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  });
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
 
   // Fetch agents from database
   useEffect(() => {
@@ -92,15 +102,29 @@ export const useAgentConfig = () => {
 
         if (error) {
           console.error("Failed to fetch agent configs:", error);
-          setAgents(DEFAULT_AGENTS);
+          if (agents.length === 0) {
+            setAgents(DEFAULT_AGENTS);
+            if (typeof window !== "undefined") {
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_AGENTS));
+            }
+          }
           return;
         }
 
         if (data && data.length > 0) {
-          setAgents(data.map(mapDbToConfig));
+          const mapped = data.map(mapDbToConfig);
+          setAgents(mapped);
+          if (typeof window !== "undefined") {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(mapped));
+          }
+        } else if (agents.length === 0) {
+          setAgents(DEFAULT_AGENTS);
         }
       } catch (err) {
         console.error("Error fetching agent configs:", err);
+        if (agents.length === 0) {
+          setAgents(DEFAULT_AGENTS);
+        }
       } finally {
         setLoading(false);
       }
@@ -109,38 +133,17 @@ export const useAgentConfig = () => {
     fetchAgents();
   }, []);
 
-  // Check if user is admin
-  useEffect(() => {
-    const checkAdminRole = async () => {
-      if (!user) {
-        setIsAdmin(false);
-        return;
-      }
-
-      try {
-        const { data, error } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", user.id)
-          .eq("role", "admin")
-          .maybeSingle();
-
-        setIsAdmin(!!data && !error);
-      } catch {
-        setIsAdmin(false);
-      }
-    };
-
-    checkAdminRole();
-  }, [user]);
-
   const updateAgent = useCallback(async (id: string, updates: Partial<AgentConfig>) => {
     // Optimistic update
-    setAgents((prev) =>
-      prev.map((agent) =>
+    setAgents((prev) => {
+      const next = prev.map((agent) =>
         agent.id === id ? { ...agent, ...updates } : agent
-      )
-    );
+      );
+      if (typeof window !== "undefined") {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      }
+      return next;
+    });
 
     // Prepare database update
     const dbUpdates: Partial<DbAgentConfig> = {};
@@ -165,7 +168,11 @@ export const useAgentConfig = () => {
         .select("*")
         .order("sort_order", { ascending: true });
       if (data) {
-        setAgents(data.map(mapDbToConfig));
+        const mapped = data.map(mapDbToConfig);
+        setAgents(mapped);
+        if (typeof window !== "undefined") {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(mapped));
+        }
       }
     }
   }, []);
@@ -188,7 +195,10 @@ export const useAgentConfig = () => {
     }
     
     setAgents(DEFAULT_AGENTS);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_AGENTS));
+    }
   }, []);
 
-  return { agents, updateAgent, resetToDefaults, loading, isAdmin };
+  return { agents, updateAgent, resetToDefaults, loading };
 };

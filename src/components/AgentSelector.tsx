@@ -1,8 +1,9 @@
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import { Settings, AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
-import { AgentConfig, useAgentConfig } from "@/hooks/useAgentConfig";
+import { AgentConfig } from "@/hooks/useAgentConfig";
 import { useMemo, useRef, useCallback } from "react";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 export type Agent = AgentConfig;
 interface AgentSelectorProps {
@@ -17,7 +18,7 @@ const AgentSelector = ({
   onSelect,
   disabled
 }: AgentSelectorProps) => {
-  const { isAdmin } = useAgentConfig();
+  const { isAdmin } = useIsAdmin();
   const selectedIndex = useMemo(() => agents.findIndex(a => a.id === selectedAgent.id), [agents, selectedAgent.id]);
 
   // Swipe handling
