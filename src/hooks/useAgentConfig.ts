@@ -63,7 +63,7 @@ const DEFAULT_AGENTS: AgentConfig[] = [
   },
 ];
 
-const STORAGE_KEY = "fortune-ai-agents";
+const STORAGE_KEY = "fortune-ai-agents-v2";
 
 const mapDbToConfig = (db: DbAgentConfig): AgentConfig => ({
   id: db.id,
