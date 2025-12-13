@@ -13,9 +13,16 @@ const StatusIndicator = ({ status, isSpeaking }: StatusIndicatorProps) => {
       case "connected":
         return isSpeaking ? "占い師が語りかけています" : "あなたの声を聴いています";
       default:
-        return "水晶に触れて占いを始める";
+        return null; // Hide text when disconnected - CTA is on the button now
     }
   };
+
+  const statusText = getStatusText();
+
+  // Don't render anything when disconnected
+  if (!statusText) {
+    return null;
+  }
 
   return (
     <div className="flex flex-col items-center gap-3">
@@ -34,7 +41,7 @@ const StatusIndicator = ({ status, isSpeaking }: StatusIndicatorProps) => {
           )}
         />
         <span className="text-sm font-medium text-muted-foreground tracking-wide">
-          {getStatusText()}
+          {statusText}
         </span>
         <div
           className={cn(
