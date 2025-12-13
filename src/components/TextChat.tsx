@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import AgentSelector, { Agent } from "./AgentSelector";
+import TextChatButton from "./TextChatButton";
 import { useAgentConfig } from "@/hooks/useAgentConfig";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
@@ -335,30 +336,11 @@ const TextChat = () => {
       )}
 
       {/* Start/End Chat Button */}
-      {!isConnected ? (
-        <Button
-          onClick={startChat}
-          disabled={isConnecting}
-          className="w-full max-w-xs"
-        >
-          {isConnecting ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              接続中...
-            </>
-          ) : (
-            "チャットを開始"
-          )}
-        </Button>
-      ) : (
-        <Button
-          onClick={endChat}
-          variant="outline"
-          className="w-full max-w-xs"
-        >
-          チャットを終了
-        </Button>
-      )}
+      <TextChatButton
+        isConnected={isConnected}
+        isConnecting={isConnecting}
+        onClick={isConnected ? endChat : startChat}
+      />
 
       {/* Profile hint when not logged in */}
       {!isConnected && !user && (
