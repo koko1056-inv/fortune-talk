@@ -97,12 +97,12 @@ const AgentSelector = ({ agents, selectedAgent, onSelect, disabled }: AgentSelec
     <div className="w-full flex flex-col items-center">
       {/* Header */}
       <div className="flex items-center justify-between w-full max-w-sm px-4 mb-8">
-        <p className="text-sm text-muted-foreground tracking-wide">
-          相談相手を選んでください
+        <p className="text-sm text-accent/80 tracking-wide font-display">
+          占い師を選んでください
         </p>
         <Link
           to="/settings"
-          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-accent transition-colors"
         >
           <Settings className="w-3.5 h-3.5" />
           設定
@@ -256,8 +256,8 @@ const AgentSelector = ({ agents, selectedAgent, onSelect, disabled }: AgentSelec
       </div>
 
       {/* Swipe hint */}
-      <p className="text-xs text-muted-foreground/50 mt-4">
-        左右にスワイプして選択
+      <p className="text-xs text-accent/40 mt-4 tracking-wider">
+        ✧ 左右にスワイプして選択 ✧
       </p>
     </div>
   );

@@ -1,24 +1,24 @@
 import VoiceChat from "@/components/VoiceChat";
+import StarField from "@/components/StarField";
 
 const Index = () => {
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center bg-background overflow-hidden">
-      {/* Ambient background */}
-      <div className="pointer-events-none fixed inset-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-float" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-accent/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '1.5s' }} />
-      </div>
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden">
+      {/* Animated star field background */}
+      <StarField />
       
       {/* Content */}
       <div className="relative z-10 flex flex-col items-center w-full max-w-2xl px-6 py-12 animate-fade-in">
         {/* Header */}
         <header className="text-center mb-12">
-          <h1 className="text-4xl font-bold tracking-tight text-foreground md:text-5xl lg:text-6xl">
-            <span className="text-gradient">Voice AI</span>
+          <p className="text-sm text-accent/80 tracking-[0.3em] uppercase mb-3 font-display">
+            Mystical Fortune
+          </p>
+          <h1 className="text-4xl font-display font-bold tracking-wide text-foreground md:text-5xl lg:text-6xl">
+            <span className="text-gradient">神秘の占い</span>
           </h1>
           <p className="mt-4 text-lg text-muted-foreground font-light tracking-wide">
-            シンプルに、話しかけるだけ。
+            水晶に触れ、運命の扉を開く
           </p>
         </header>
 
@@ -29,10 +29,15 @@ const Index = () => {
 
         {/* Footer */}
         <footer className="mt-16 text-center">
-          <p className="text-sm text-muted-foreground/60 leading-relaxed">
-            ボタンをタップしてマイクを有効にし、
+          <div className="inline-flex items-center gap-2 text-accent/60 text-sm">
+            <span className="w-8 h-px bg-gradient-to-r from-transparent to-accent/30" />
+            <span>✧</span>
+            <span className="w-8 h-px bg-gradient-to-l from-transparent to-accent/30" />
+          </div>
+          <p className="mt-3 text-sm text-muted-foreground/60 leading-relaxed">
+            水晶玉に触れて占い師と繋がり、
             <br />
-            自然に話しかけてください。
+            あなたの運命を紐解いていきましょう。
           </p>
         </footer>
       </div>
