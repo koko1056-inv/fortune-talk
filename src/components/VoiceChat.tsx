@@ -170,25 +170,25 @@ const VoiceChat = () => {
       )}
 
       {/* Connected Agent Display */}
-      {isConnected && (
+      {isConnected && currentAgentRef.current && (
         <div className="text-center animate-fade-in">
           <div 
             className={cn(
               "w-20 h-20 md:w-24 md:h-24 rounded-full mx-auto mb-3 md:mb-4 flex items-center justify-center text-4xl md:text-5xl",
               "bg-gradient-to-br shadow-crystal animate-float-slow",
-              selectedAgent.gradient
+              currentAgentRef.current.gradient
             )}
             style={{
               boxShadow: '0 0 40px hsl(280 70% 50% / 0.4), inset 0 0 30px hsl(200 60% 80% / 0.15)'
             }}
           >
-            <span className="drop-shadow-lg">{selectedAgent.emoji}</span>
+            <span className="drop-shadow-lg">{currentAgentRef.current.emoji}</span>
           </div>
           <h2 className="text-xl md:text-2xl font-display font-bold text-gradient tracking-wide">
-            {selectedAgent.name}
+            {currentAgentRef.current.name}
           </h2>
           <p className="text-xs md:text-sm text-muted-foreground mt-1 md:mt-2 tracking-wide">
-            {selectedAgent.description}
+            {currentAgentRef.current.description}
           </p>
           {/* Show user info during session */}
           {profile?.display_name && (
