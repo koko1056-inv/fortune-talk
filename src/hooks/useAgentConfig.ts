@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "./useAuth";
 
 export interface AgentConfig {
   id: string;
@@ -9,6 +11,18 @@ export interface AgentConfig {
   imageUrl?: string;
   gradient: string;
   accentColor: string;
+}
+
+interface DbAgentConfig {
+  id: string;
+  agent_id: string;
+  name: string;
+  description: string;
+  emoji: string;
+  image_url: string | null;
+  gradient: string;
+  accent_color: string;
+  sort_order: number;
 }
 
 const DEFAULT_AGENTS: AgentConfig[] = [
@@ -50,37 +64,130 @@ const DEFAULT_AGENTS: AgentConfig[] = [
   },
 ];
 
-const STORAGE_KEY = "fortune-ai-agents";
+const mapDbToConfig = (db: DbAgentConfig): AgentConfig => ({
+  id: db.id,
+  agentId: db.agent_id,
+  name: db.name,
+  description: db.description,
+  emoji: db.emoji,
+  imageUrl: db.image_url ?? undefined,
+  gradient: db.gradient,
+  accentColor: db.accent_color,
+});
 
 export const useAgentConfig = () => {
-  const [agents, setAgents] = useState<AgentConfig[]>(() => {
-    if (typeof window === "undefined") return DEFAULT_AGENTS;
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        return JSON.parse(stored);
-      } catch {
-        return DEFAULT_AGENTS;
-      }
-    }
-    return DEFAULT_AGENTS;
-  });
+  const { user } = useAuth();
+  const [agents, setAgents] = useState<AgentConfig[]>(DEFAULT_AGENTS);
+  const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
+  // Fetch agents from database
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(agents));
-  }, [agents]);
+    const fetchAgents = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("agent_configs")
+          .select("*")
+          .order("sort_order", { ascending: true });
 
-  const updateAgent = useCallback((id: string, updates: Partial<AgentConfig>) => {
+        if (error) {
+          console.error("Failed to fetch agent configs:", error);
+          return;
+        }
+
+        if (data && data.length > 0) {
+          setAgents(data.map(mapDbToConfig));
+        }
+      } catch (err) {
+        console.error("Error fetching agent configs:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAgents();
+  }, []);
+
+  // Check if user is admin
+  useEffect(() => {
+    const checkAdminRole = async () => {
+      if (!user) {
+        setIsAdmin(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", user.id)
+          .eq("role", "admin")
+          .maybeSingle();
+
+        setIsAdmin(!!data && !error);
+      } catch {
+        setIsAdmin(false);
+      }
+    };
+
+    checkAdminRole();
+  }, [user]);
+
+  const updateAgent = useCallback(async (id: string, updates: Partial<AgentConfig>) => {
+    // Optimistic update
     setAgents((prev) =>
       prev.map((agent) =>
         agent.id === id ? { ...agent, ...updates } : agent
       )
     );
+
+    // Prepare database update
+    const dbUpdates: Partial<DbAgentConfig> = {};
+    if (updates.agentId !== undefined) dbUpdates.agent_id = updates.agentId;
+    if (updates.name !== undefined) dbUpdates.name = updates.name;
+    if (updates.description !== undefined) dbUpdates.description = updates.description;
+    if (updates.emoji !== undefined) dbUpdates.emoji = updates.emoji;
+    if (updates.imageUrl !== undefined) dbUpdates.image_url = updates.imageUrl ?? null;
+    if (updates.gradient !== undefined) dbUpdates.gradient = updates.gradient;
+    if (updates.accentColor !== undefined) dbUpdates.accent_color = updates.accentColor;
+
+    const { error } = await supabase
+      .from("agent_configs")
+      .update(dbUpdates)
+      .eq("id", id);
+
+    if (error) {
+      console.error("Failed to update agent config:", error);
+      // Revert on error - refetch from database
+      const { data } = await supabase
+        .from("agent_configs")
+        .select("*")
+        .order("sort_order", { ascending: true });
+      if (data) {
+        setAgents(data.map(mapDbToConfig));
+      }
+    }
   }, []);
 
-  const resetToDefaults = useCallback(() => {
+  const resetToDefaults = useCallback(async () => {
+    // Reset in database
+    for (const agent of DEFAULT_AGENTS) {
+      await supabase
+        .from("agent_configs")
+        .update({
+          agent_id: agent.agentId,
+          name: agent.name,
+          description: agent.description,
+          emoji: agent.emoji,
+          image_url: null,
+          gradient: agent.gradient,
+          accent_color: agent.accentColor,
+        })
+        .eq("id", agent.id);
+    }
+    
     setAgents(DEFAULT_AGENTS);
   }, []);
 
-  return { agents, updateAgent, resetToDefaults };
+  return { agents, updateAgent, resetToDefaults, loading, isAdmin };
 };
