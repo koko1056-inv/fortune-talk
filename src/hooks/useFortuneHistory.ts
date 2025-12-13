@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 
@@ -13,49 +14,49 @@ export interface FortuneReading {
   created_at: string;
 }
 
+const fetchReadings = async (userId: string): Promise<FortuneReading[]> => {
+  const { data, error } = await supabase
+    .from('fortune_readings')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching readings:', error);
+    return [];
+  }
+
+  return data || [];
+};
+
 export const useFortuneHistory = () => {
   const { user } = useAuth();
-  const [readings, setReadings] = useState<FortuneReading[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  const fetchReadings = useCallback(async () => {
-    if (!user) {
-      setReadings([]);
-      setLoading(false);
-      return;
-    }
+  const { data: readings = [], isLoading: loading } = useQuery({
+    queryKey: ['fortune-readings', user?.id],
+    queryFn: () => fetchReadings(user!.id),
+    enabled: !!user,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
 
-    try {
-      const { data, error } = await supabase
-        .from('fortune_readings')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+  const saveMutation = useMutation({
+    mutationFn: async ({
+      agentName,
+      agentEmoji,
+      startedAt,
+      endedAt,
+    }: {
+      agentName: string;
+      agentEmoji: string;
+      startedAt: Date;
+      endedAt: Date;
+    }) => {
+      if (!user) throw new Error('Not authenticated');
 
-      if (error) throw error;
-      setReadings(data || []);
-    } catch (error) {
-      console.error('Error fetching readings:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [user]);
+      const durationSeconds = Math.round((endedAt.getTime() - startedAt.getTime()) / 1000);
 
-  useEffect(() => {
-    fetchReadings();
-  }, [fetchReadings]);
-
-  const saveReading = useCallback(async (
-    agentName: string,
-    agentEmoji: string,
-    startedAt: Date,
-    endedAt: Date
-  ) => {
-    if (!user) return null;
-
-    const durationSeconds = Math.round((endedAt.getTime() - startedAt.getTime()) / 1000);
-
-    try {
       const { data, error } = await supabase
         .from('fortune_readings')
         .insert({
@@ -70,40 +71,85 @@ export const useFortuneHistory = () => {
         .single();
 
       if (error) throw error;
-      
-      // Refresh the list
-      await fetchReadings();
       return data;
-    } catch (error) {
-      console.error('Error saving reading:', error);
-      return null;
-    }
-  }, [user, fetchReadings]);
+    },
+    onSuccess: () => {
+      if (user) {
+        queryClient.invalidateQueries({ queryKey: ['fortune-readings', user.id] });
+      }
+    },
+  });
 
-  const deleteReading = useCallback(async (id: string) => {
-    if (!user) return false;
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      if (!user) throw new Error('Not authenticated');
 
-    try {
       const { error } = await supabase
         .from('fortune_readings')
         .delete()
         .eq('id', id);
 
       if (error) throw error;
-      
-      await fetchReadings();
-      return true;
-    } catch (error) {
-      console.error('Error deleting reading:', error);
-      return false;
+      return id;
+    },
+    onSuccess: () => {
+      if (user) {
+        queryClient.invalidateQueries({ queryKey: ['fortune-readings', user.id] });
+      }
+    },
+  });
+
+  const saveReading = useCallback(
+    async (
+      agentName: string,
+      agentEmoji: string,
+      startedAt: Date,
+      endedAt: Date
+    ) => {
+      if (!user) return null;
+
+      try {
+        const data = await saveMutation.mutateAsync({
+          agentName,
+          agentEmoji,
+          startedAt,
+          endedAt,
+        });
+        return data;
+      } catch (error) {
+        console.error('Error saving reading:', error);
+        return null;
+      }
+    },
+    [user, saveMutation]
+  );
+
+  const deleteReading = useCallback(
+    async (id: string) => {
+      if (!user) return false;
+
+      try {
+        await deleteMutation.mutateAsync(id);
+        return true;
+      } catch (error) {
+        console.error('Error deleting reading:', error);
+        return false;
+      }
+    },
+    [user, deleteMutation]
+  );
+
+  const refetch = useCallback(() => {
+    if (user) {
+      queryClient.invalidateQueries({ queryKey: ['fortune-readings', user.id] });
     }
-  }, [user, fetchReadings]);
+  }, [queryClient, user]);
 
   return {
     readings,
     loading,
     saveReading,
     deleteReading,
-    refetch: fetchReadings,
+    refetch,
   };
 };

@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import { useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 
@@ -33,67 +34,81 @@ export const calculateZodiacSign = (birthDate: string): string => {
   return "魚座";
 };
 
+const fetchProfile = async (userId: string): Promise<Profile | null> => {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Error fetching profile:", error);
+    return null;
+  }
+
+  return data;
+};
+
 export const useProfile = () => {
   const { user } = useAuth();
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  const fetchProfile = useCallback(async () => {
-    if (!user) {
-      setProfile(null);
-      setLoading(false);
-      return;
-    }
+  const { data: profile = null, isLoading: loading } = useQuery({
+    queryKey: ["profile", user?.id],
+    queryFn: () => fetchProfile(user!.id),
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
 
-    try {
+  const updateMutation = useMutation({
+    mutationFn: async (updates: Partial<Profile>) => {
+      if (!user) throw new Error("Not authenticated");
+
+      // Auto-calculate zodiac sign if birth date is provided
+      if (updates.birth_date) {
+        updates.zodiac_sign = calculateZodiacSign(updates.birth_date);
+      }
+
       const { data, error } = await supabase
         .from("profiles")
-        .select("*")
+        .update(updates)
         .eq("user_id", user.id)
+        .select()
         .maybeSingle();
 
-      if (error) {
-        console.error("Error fetching profile:", error);
-      } else {
-        setProfile(data);
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      if (data && user) {
+        queryClient.setQueryData(["profile", user.id], data);
       }
-    } catch (error) {
-      console.error("Error fetching profile:", error);
-    } finally {
-      setLoading(false);
+    },
+  });
+
+  const updateProfile = useCallback(
+    async (updates: Partial<Profile>) => {
+      try {
+        const data = await updateMutation.mutateAsync(updates);
+        return { data, error: null };
+      } catch (error) {
+        return { data: null, error: error as Error };
+      }
+    },
+    [updateMutation]
+  );
+
+  const refetch = useCallback(() => {
+    if (user) {
+      queryClient.invalidateQueries({ queryKey: ["profile", user.id] });
     }
-  }, [user]);
-
-  useEffect(() => {
-    fetchProfile();
-  }, [fetchProfile]);
-
-  const updateProfile = async (updates: Partial<Profile>) => {
-    if (!user) return { error: new Error("Not authenticated") };
-
-    // Auto-calculate zodiac sign if birth date is provided
-    if (updates.birth_date) {
-      updates.zodiac_sign = calculateZodiacSign(updates.birth_date);
-    }
-
-    const { data, error } = await supabase
-      .from("profiles")
-      .update(updates)
-      .eq("user_id", user.id)
-      .select()
-      .maybeSingle();
-
-    if (!error && data) {
-      setProfile(data);
-    }
-
-    return { data, error };
-  };
+  }, [queryClient, user]);
 
   return {
     profile,
     loading,
     updateProfile,
-    refetch: fetchProfile,
+    refetch,
   };
 };
