@@ -174,15 +174,24 @@ const VoiceChat = () => {
         <div className="text-center animate-fade-in">
           <div 
             className={cn(
-              "w-20 h-20 md:w-24 md:h-24 rounded-full mx-auto mb-3 md:mb-4 flex items-center justify-center text-4xl md:text-5xl",
+              "w-20 h-20 md:w-24 md:h-24 rounded-full mx-auto mb-3 md:mb-4 flex items-center justify-center overflow-hidden",
               "bg-gradient-to-br shadow-crystal animate-float-slow",
+              !currentAgentRef.current.imageUrl && "text-4xl md:text-5xl",
               currentAgentRef.current.gradient
             )}
             style={{
               boxShadow: '0 0 40px hsl(280 70% 50% / 0.4), inset 0 0 30px hsl(200 60% 80% / 0.15)'
             }}
           >
-            <span className="drop-shadow-lg">{currentAgentRef.current.emoji}</span>
+            {currentAgentRef.current.imageUrl ? (
+              <img 
+                src={currentAgentRef.current.imageUrl} 
+                alt={currentAgentRef.current.name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span className="drop-shadow-lg">{currentAgentRef.current.emoji}</span>
+            )}
           </div>
           <h2 className="text-xl md:text-2xl font-display font-bold text-gradient tracking-wide">
             {currentAgentRef.current.name}
