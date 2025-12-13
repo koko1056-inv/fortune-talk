@@ -7,9 +7,13 @@ import AudioVisualizer from "./AudioVisualizer";
 import StatusIndicator from "./StatusIndicator";
 import AgentSelector, { Agent } from "./AgentSelector";
 import { useAgentConfig } from "@/hooks/useAgentConfig";
+import { useProfile } from "@/hooks/useProfile";
+import { useAuth } from "@/hooks/useAuth";
 
 const VoiceChat = () => {
   const { agents } = useAgentConfig();
+  const { user } = useAuth();
+  const { profile } = useProfile();
   const [isConnecting, setIsConnecting] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<Agent>(agents[0]);
 
@@ -21,16 +25,48 @@ const VoiceChat = () => {
     }
   }, [agents, selectedAgent.id]);
 
+  // Build dynamic prompt with user profile
+  const buildDynamicPrompt = useCallback(() => {
+    if (!profile) return null;
+
+    const parts: string[] = [];
+    
+    if (profile.display_name) {
+      parts.push(`相談者の名前: ${profile.display_name}`);
+    }
+    
+    if (profile.birth_date) {
+      const birthDate = new Date(profile.birth_date);
+      const formattedDate = `${birthDate.getFullYear()}年${birthDate.getMonth() + 1}月${birthDate.getDate()}日`;
+      parts.push(`生年月日: ${formattedDate}`);
+    }
+    
+    if (profile.zodiac_sign) {
+      parts.push(`星座: ${profile.zodiac_sign}`);
+    }
+    
+    if (profile.blood_type) {
+      parts.push(`血液型: ${profile.blood_type}型`);
+    }
+
+    if (parts.length === 0) return null;
+
+    return `【相談者のプロフィール情報】\n${parts.join('\n')}\n\nこの情報を参考にして、パーソナライズされた占いを提供してください。`;
+  }, [profile]);
+
   const conversation = useConversation({
     onConnect: () => {
       console.log("Connected to agent");
-      toast.success(`${selectedAgent.name}と接続しました`, {
+      const profileInfo = profile?.display_name 
+        ? `${profile.display_name}さん、${selectedAgent.name}と接続しました`
+        : `${selectedAgent.name}と接続しました`;
+      toast.success(profileInfo, {
         description: "話しかけてください",
       });
     },
     onDisconnect: () => {
       console.log("Disconnected from agent");
-      toast.info("切断しました");
+      toast.info("鑑定を終了しました");
     },
     onError: (error) => {
       console.error("Error:", error);
@@ -45,11 +81,30 @@ const VoiceChat = () => {
     try {
       await navigator.mediaDevices.getUserMedia({ audio: true });
       
-      await (conversation.startSession as any)({
+      const dynamicPrompt = buildDynamicPrompt();
+      
+      // Build session options
+      const sessionOptions: any = {
         agentId: selectedAgent.agentId,
-      });
+      };
+
+      // Add dynamic variables if user has profile
+      if (dynamicPrompt && profile) {
+        sessionOptions.dynamicVariables = {
+          user_profile: dynamicPrompt,
+          user_name: profile.display_name || "お客様",
+          user_zodiac: profile.zodiac_sign || "",
+          user_blood_type: profile.blood_type ? `${profile.blood_type}型` : "",
+          user_birth_date: profile.birth_date || "",
+        };
+      }
+
+      await (conversation.startSession as any)(sessionOptions);
       
       console.log("Session started with agent:", selectedAgent.name);
+      if (dynamicPrompt) {
+        console.log("User profile context:", dynamicPrompt);
+      }
     } catch (error) {
       console.error("Failed to start conversation:", error);
       if (error instanceof Error && error.name === "NotAllowedError") {
@@ -64,7 +119,7 @@ const VoiceChat = () => {
     } finally {
       setIsConnecting(false);
     }
-  }, [conversation, selectedAgent]);
+  }, [conversation, selectedAgent, buildDynamicPrompt, profile]);
 
   const stopConversation = useCallback(async () => {
     await conversation.endSession();
@@ -113,7 +168,21 @@ const VoiceChat = () => {
           <p className="text-sm text-muted-foreground mt-2 tracking-wide">
             {selectedAgent.description}
           </p>
+          {/* Show user info during session */}
+          {profile?.display_name && (
+            <p className="text-xs text-accent/70 mt-3">
+              ✧ {profile.display_name}さんの鑑定中 ✧
+            </p>
+          )}
         </div>
+      )}
+
+      {/* Profile hint when not logged in */}
+      {!isConnected && !user && (
+        <p className="text-xs text-muted-foreground/60 text-center">
+          💡 ログインしてプロフィールを登録すると、<br />
+          パーソナライズされた占いを受けられます
+        </p>
       )}
 
       {/* Audio Visualizer */}
