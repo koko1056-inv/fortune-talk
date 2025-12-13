@@ -29,21 +29,10 @@ const VoiceButton = ({
       background: isConnected ? 'linear-gradient(135deg, hsl(0 60% 30% / 0.8), hsl(0 50% 25% / 0.9))' : 'linear-gradient(135deg, hsl(280 50% 25% / 0.8), hsl(260 40% 20% / 0.9))',
       boxShadow: isConnected ? '0 0 30px hsl(0 60% 40% / 0.4), inset 0 1px 0 hsl(0 50% 50% / 0.2), 0 10px 30px -10px hsl(0 50% 10% / 0.5)' : '0 0 40px hsl(280 60% 50% / 0.3), inset 0 1px 0 hsl(280 50% 60% / 0.2), 0 10px 30px -10px hsl(260 50% 5% / 0.5)'
     }}>
-        {/* Decorative sparkle */}
-        {!isConnected && !isConnecting && <span className="absolute -top-2 -right-2 text-accent animate-twinkle">✦</span>}
-        
-        {/* Icon */}
-        {isConnecting ? <Loader2 className="h-5 w-5 md:h-6 md:w-6 text-accent animate-spin" /> : isConnected ? <PhoneOff className="h-5 w-5 md:h-6 md:w-6 text-red-300" /> : <Sparkles className="h-5 w-5 md:h-6 md:w-6 text-accent" />}
-        
         {/* Text */}
         <span className={cn("font-display font-semibold tracking-wider text-sm md:text-base", isConnected ? "text-red-200" : "text-foreground")}>
           {isConnecting ? "接続中..." : isConnected ? "鑑定を終了" : "占いを始める"}
         </span>
-        
-        {/* Decorative sparkle */}
-        {!isConnected && !isConnecting && <span className="absolute -bottom-2 -left-2 text-accent/60 animate-twinkle" style={{
-        animationDelay: '1s'
-      }}>✧</span>}
       </button>
       
       {/* Hint text when not connected */}
