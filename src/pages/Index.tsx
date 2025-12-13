@@ -63,11 +63,11 @@ const Index = () => {
           </div>
           
           <p className="text-sm text-accent tracking-[0.4em] uppercase mb-3 font-display animate-shimmer inline-block">
-            ✧ Fortune Telling AI ✧
+            ✧ Fortune Voice ✧
           </p>
           
           <h1 className="text-5xl font-display font-bold tracking-wide text-foreground md:text-6xl lg:text-7xl">
-            <span className="text-gradient drop-shadow-[0_0_30px_hsl(45_80%_55%/0.5)]">占いAI</span>
+            <span className="text-gradient drop-shadow-[0_0_30px_hsl(45_80%_55%/0.5)]">フォーチュンボイス</span>
           </h1>
           
           <p className="mt-5 text-lg text-muted-foreground font-light tracking-wider">
