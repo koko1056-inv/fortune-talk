@@ -15,7 +15,7 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Shippori Mincho', 'serif'],
-        display: ['Cinzel', 'serif'],
+        display: ['Shippori Mincho', 'serif'],
       },
       colors: {
         border: "hsl(var(--border))",
