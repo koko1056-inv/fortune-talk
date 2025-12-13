@@ -71,7 +71,7 @@ const Index = () => {
           </h1>
           
           <p className="mt-5 text-lg text-muted-foreground font-light tracking-wider">
-            水晶に触れ、<span className="text-accent">運命</span>の扉を開く
+            話しかけて、<span className="text-accent">未来</span>を聴く
           </p>
           
           {/* User greeting */}
