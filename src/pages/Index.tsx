@@ -38,7 +38,7 @@ const Index = () => {
       </div>
       
       {/* Content */}
-      <div className="relative z-10 flex flex-col items-center w-full max-w-2xl px-4 md:px-6 py-6 md:py-12 animate-fade-in">
+      <div className="relative z-10 flex flex-col items-center w-full max-w-2xl px-4 md:px-6 pt-16 pb-6 md:py-12 animate-fade-in">
         {/* Header - Compact on mobile */}
         <header className="text-center mb-6 md:mb-12">
           {/* Decorative sparkles - smaller on mobile */}
