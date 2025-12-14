@@ -88,8 +88,8 @@ const Auth = () => {
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-primary/30 to-accent/20 mb-6 animate-float">
             <Sparkles className="w-10 h-10 text-accent" />
           </div>
-          <h1 className="text-3xl font-display font-bold text-gradient mb-2">
-            占いAI
+          <h1 className="text-3xl font-bold text-gradient mb-2 tracking-tight">
+            Fortune AI
           </h1>
           <p className="text-muted-foreground">
             {isLogin ? "あなたの運命への扉を開く" : "新しい旅を始める"}
