@@ -146,6 +146,39 @@ export type Database = {
         }
         Relationships: []
       }
+      ticket_transactions: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          price_per_ticket: number | null
+          ticket_amount: number
+          total_price: number | null
+          transaction_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          price_per_ticket?: number | null
+          ticket_amount: number
+          total_price?: number | null
+          transaction_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          price_per_ticket?: number | null
+          ticket_amount?: number
+          total_price?: number | null
+          transaction_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -167,15 +200,49 @@ export type Database = {
         }
         Relationships: []
       }
+      user_tickets: {
+        Row: {
+          created_at: string
+          id: string
+          ticket_balance: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ticket_balance?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ticket_balance?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      add_tickets: {
+        Args: {
+          _amount: number
+          _price_per_ticket: number
+          _total_price: number
+          _user_id: string
+        }
+        Returns: boolean
+      }
       get_monthly_usage_seconds: {
         Args: { _month: number; _user_id: string; _year: number }
         Returns: number
       }
+      get_ticket_balance: { Args: { _user_id: string }; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -185,6 +252,7 @@ export type Database = {
       }
       has_used_free_reading: { Args: { _user_id: string }; Returns: boolean }
       is_billing_exempt: { Args: { _user_id: string }; Returns: boolean }
+      use_ticket: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user"

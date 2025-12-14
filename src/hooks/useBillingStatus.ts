@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 
@@ -7,13 +7,20 @@ interface BillingStatus {
   isExempt: boolean;
   hasUsedFreeReading: boolean;
   canStartReading: boolean;
-  monthlyUsageSeconds: number;
+  ticketBalance: number;
 }
 
-const MONTHLY_LIMIT_SECONDS = 30 * 60; // 30 minutes per month
+// Ticket pricing configuration
+export const TICKET_PACKAGES = [
+  { amount: 1, pricePerTicket: 1000, totalPrice: 1000, discount: 0 },
+  { amount: 10, pricePerTicket: 900, totalPrice: 9000, discount: 10 },
+  { amount: 50, pricePerTicket: 800, totalPrice: 40000, discount: 20 },
+  { amount: 100, pricePerTicket: 700, totalPrice: 70000, discount: 30 },
+] as const;
 
 export const useBillingStatus = () => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const { data: billingStatus, isLoading, refetch } = useQuery({
     queryKey: ['billing-status', user?.id],
@@ -22,53 +29,56 @@ export const useBillingStatus = () => {
         return {
           isExempt: false,
           hasUsedFreeReading: false,
-          canStartReading: true, // Non-logged in users can try
-          monthlyUsageSeconds: 0,
+          canStartReading: true,
+          ticketBalance: 0,
         };
       }
 
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = now.getMonth() + 1;
-
       // Run all checks in parallel
-      const [exemptResult, freeReadingResult, usageResult] = await Promise.all([
+      const [exemptResult, freeReadingResult, ticketResult] = await Promise.all([
         supabase.rpc('is_billing_exempt', { _user_id: user.id }),
         supabase.rpc('has_used_free_reading', { _user_id: user.id }),
-        supabase.rpc('get_monthly_usage_seconds', { 
-          _user_id: user.id, 
-          _year: year, 
-          _month: month 
-        }),
+        supabase.rpc('get_ticket_balance', { _user_id: user.id }),
       ]);
 
       const isExempt = exemptResult.data ?? false;
       const hasUsedFreeReading = freeReadingResult.data ?? false;
-      const monthlyUsageSeconds = usageResult.data ?? 0;
+      const ticketBalance = ticketResult.data ?? 0;
 
       // Determine if user can start a reading
       let canStartReading = true;
       
       if (isExempt) {
-        // Exempt users can always use the service
         canStartReading = true;
       } else if (!hasUsedFreeReading) {
-        // First reading is free
         canStartReading = true;
       } else {
-        // Check monthly limit (for now, limit access until payment is implemented)
-        canStartReading = monthlyUsageSeconds < MONTHLY_LIMIT_SECONDS;
+        // Check if user has tickets
+        canStartReading = ticketBalance > 0;
       }
 
       return {
         isExempt,
         hasUsedFreeReading,
         canStartReading,
-        monthlyUsageSeconds,
+        ticketBalance,
       };
     },
     enabled: true,
-    staleTime: 30 * 1000, // 30 seconds
+    staleTime: 30 * 1000,
+  });
+
+  // Mutation to use a ticket
+  const useTicketMutation = useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error('Not authenticated');
+      const { data, error } = await supabase.rpc('use_ticket', { _user_id: user.id });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['billing-status', user?.id] });
+    },
   });
 
   const checkCanStartReading = useCallback(() => {
@@ -80,16 +90,21 @@ export const useBillingStatus = () => {
     return billingStatus?.hasUsedFreeReading === false;
   }, [user, billingStatus]);
 
+  const useTicket = useCallback(async () => {
+    return useTicketMutation.mutateAsync();
+  }, [useTicketMutation]);
+
   return {
     billingStatus: billingStatus ?? {
       isExempt: false,
       hasUsedFreeReading: false,
       canStartReading: true,
-      monthlyUsageSeconds: 0,
+      ticketBalance: 0,
     },
     loading: isLoading,
     checkCanStartReading,
     isFirstFreeReading,
+    useTicket,
     refetch,
   };
 };
