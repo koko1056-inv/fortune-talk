@@ -39,11 +39,11 @@ const Index = () => {
           </Link>}
         {user && <Link to="/chat-history" className="flex items-center gap-1.5 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full glass-surface text-xs md:text-sm text-foreground/80 hover:text-accent transition-colors">
             <MessageSquare className="w-3.5 h-3.5 md:w-4 md:h-4" />
-            <span className="hidden sm:inline">チャット</span>
+            <span className="hidden sm:inline">チャット履歴</span>
           </Link>}
         {user && <Link to="/history" className="flex items-center gap-1.5 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full glass-surface text-xs md:text-sm text-foreground/80 hover:text-accent transition-colors">
             <ScrollText className="w-3.5 h-3.5 md:w-4 md:h-4" />
-            <span className="hidden sm:inline">履歴</span>
+            <span className="hidden sm:inline">トーク履歴</span>
           </Link>}
         {user ? <Link to="/profile" className="flex items-center gap-1.5 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full glass-surface text-xs md:text-sm text-foreground/80 hover:text-accent transition-colors">
             <User className="w-3.5 h-3.5 md:w-4 md:h-4" />
