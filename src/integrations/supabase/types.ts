@@ -151,6 +151,39 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_fortunes: {
+        Row: {
+          content: string
+          created_at: string
+          fortune_date: string
+          id: string
+          lucky_color: string | null
+          lucky_number: number | null
+          overall_luck: number | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          fortune_date?: string
+          id?: string
+          lucky_color?: string | null
+          lucky_number?: number | null
+          overall_luck?: number | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          fortune_date?: string
+          id?: string
+          lucky_color?: string | null
+          lucky_number?: number | null
+          overall_luck?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       fortune_readings: {
         Row: {
           agent_emoji: string | null

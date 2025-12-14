@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { User, LogIn, ScrollText, Ticket, MessageSquare, Settings } from "lucide-react";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { DailyFortuneCard } from "@/components/DailyFortuneCard";
 
 const SettingsLink = () => {
   const { isAdmin } = useIsAdmin();
@@ -101,6 +102,11 @@ const Index = () => {
             </div>
           )}
         </header>
+
+        {/* Daily Fortune Card */}
+        <div className="w-full mb-6 md:mb-8 flex justify-center">
+          <DailyFortuneCard />
+        </div>
 
         {/* Chat Interface */}
         <main className="w-full">
