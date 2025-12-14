@@ -77,6 +77,80 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_messages: {
+        Row: {
+          choices: Json | null
+          content: string
+          created_at: string
+          id: string
+          role: string
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          choices?: Json | null
+          content: string
+          created_at?: string
+          id?: string
+          role: string
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          choices?: Json | null
+          content?: string
+          created_at?: string
+          id?: string
+          role?: string
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "chat_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_sessions: {
+        Row: {
+          agent_emoji: string | null
+          agent_name: string
+          created_at: string
+          ended_at: string | null
+          id: string
+          rally_count: number
+          started_at: string
+          ticket_used: boolean
+          user_id: string
+        }
+        Insert: {
+          agent_emoji?: string | null
+          agent_name: string
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          rally_count?: number
+          started_at?: string
+          ticket_used?: boolean
+          user_id: string
+        }
+        Update: {
+          agent_emoji?: string | null
+          agent_name?: string
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          rally_count?: number
+          started_at?: string
+          ticket_used?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       fortune_readings: {
         Row: {
           agent_emoji: string | null
