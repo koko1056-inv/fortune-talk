@@ -56,6 +56,27 @@ export type Database = {
         }
         Relationships: []
       }
+      billing_exemptions: {
+        Row: {
+          created_at: string
+          id: string
+          reason: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reason?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reason?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       fortune_readings: {
         Row: {
           agent_emoji: string | null
@@ -64,6 +85,7 @@ export type Database = {
           duration_seconds: number | null
           ended_at: string | null
           id: string
+          is_free_reading: boolean
           started_at: string
           user_id: string
         }
@@ -74,6 +96,7 @@ export type Database = {
           duration_seconds?: number | null
           ended_at?: string | null
           id?: string
+          is_free_reading?: boolean
           started_at?: string
           user_id: string
         }
@@ -84,6 +107,7 @@ export type Database = {
           duration_seconds?: number | null
           ended_at?: string | null
           id?: string
+          is_free_reading?: boolean
           started_at?: string
           user_id?: string
         }
@@ -148,6 +172,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_monthly_usage_seconds: {
+        Args: { _month: number; _user_id: string; _year: number }
+        Returns: number
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -155,6 +183,8 @@ export type Database = {
         }
         Returns: boolean
       }
+      has_used_free_reading: { Args: { _user_id: string }; Returns: boolean }
+      is_billing_exempt: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user"
