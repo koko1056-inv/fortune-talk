@@ -6,7 +6,19 @@ import ChatModeToggle, { ChatMode } from "@/components/ChatModeToggle";
 import StarField from "@/components/StarField";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
-import { User, LogIn, ScrollText, Ticket, MessageSquare } from "lucide-react";
+import { User, LogIn, ScrollText, Ticket, MessageSquare, Settings } from "lucide-react";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
+
+const SettingsLink = () => {
+  const { isAdmin } = useIsAdmin();
+  if (!isAdmin) return null;
+  return (
+    <Link to="/settings" className="flex items-center gap-1 text-xs text-muted-foreground hover:text-accent transition-colors">
+      <Settings className="w-3 h-3" />
+      <span className="hidden sm:inline">設定</span>
+    </Link>
+  );
+};
 
 const Index = () => {
   const { user } = useAuth();
@@ -79,10 +91,15 @@ const Index = () => {
             話しかけて、<span className="text-accent">未来</span>を聴く
           </p>
           
-          {/* User greeting */}
-          {user && profile?.display_name && <p className="mt-3 md:mt-4 text-xs md:text-sm text-accent/80">
-              ようこそ、{profile.display_name}さん ✨
-            </p>}
+          {/* User greeting with settings link */}
+          {user && profile?.display_name && (
+            <div className="mt-3 md:mt-4 flex items-center justify-center gap-2">
+              <p className="text-xs md:text-sm text-accent/80">
+                ようこそ、{profile.display_name}さん ✨
+              </p>
+              <SettingsLink />
+            </div>
+          )}
         </header>
 
         {/* Chat Interface */}
