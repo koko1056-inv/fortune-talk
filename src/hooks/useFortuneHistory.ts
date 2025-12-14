@@ -47,11 +47,13 @@ export const useFortuneHistory = () => {
       agentEmoji,
       startedAt,
       endedAt,
+      isFreeReading = false,
     }: {
       agentName: string;
       agentEmoji: string;
       startedAt: Date;
       endedAt: Date;
+      isFreeReading?: boolean;
     }) => {
       if (!user) throw new Error('Not authenticated');
 
@@ -66,6 +68,7 @@ export const useFortuneHistory = () => {
           started_at: startedAt.toISOString(),
           ended_at: endedAt.toISOString(),
           duration_seconds: durationSeconds,
+          is_free_reading: isFreeReading,
         })
         .select()
         .single();
@@ -76,6 +79,7 @@ export const useFortuneHistory = () => {
     onSuccess: () => {
       if (user) {
         queryClient.invalidateQueries({ queryKey: ['fortune-readings', user.id] });
+        queryClient.invalidateQueries({ queryKey: ['billing-status', user.id] });
       }
     },
   });
@@ -104,7 +108,8 @@ export const useFortuneHistory = () => {
       agentName: string,
       agentEmoji: string,
       startedAt: Date,
-      endedAt: Date
+      endedAt: Date,
+      isFreeReading = false
     ) => {
       if (!user) return null;
 
@@ -114,6 +119,7 @@ export const useFortuneHistory = () => {
           agentEmoji,
           startedAt,
           endedAt,
+          isFreeReading,
         });
         return data;
       } catch (error) {

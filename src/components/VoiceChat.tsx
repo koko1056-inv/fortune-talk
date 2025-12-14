@@ -10,16 +10,19 @@ import { useAgentConfig } from "@/hooks/useAgentConfig";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
 import { useFortuneHistory } from "@/hooks/useFortuneHistory";
+import { useBillingStatus } from "@/hooks/useBillingStatus";
 
 const VoiceChat = () => {
   const { agents, loading: agentsLoading } = useAgentConfig();
   const { user } = useAuth();
   const { profile } = useProfile();
   const { saveReading } = useFortuneHistory();
+  const { billingStatus, isFirstFreeReading, refetch: refetchBilling } = useBillingStatus();
   const [isConnecting, setIsConnecting] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const sessionStartRef = useRef<Date | null>(null);
   const currentAgentRef = useRef<Agent | null>(null);
+  const isFreeReadingRef = useRef(false);
 
   // Set initial selected agent when agents are loaded
   useEffect(() => {
@@ -99,10 +102,14 @@ const VoiceChat = () => {
           currentAgentRef.current.name,
           currentAgentRef.current.emoji,
           sessionStartRef.current,
-          endTime
+          endTime,
+          isFreeReadingRef.current
         );
         sessionStartRef.current = null;
         currentAgentRef.current = null;
+        isFreeReadingRef.current = false;
+        // Refresh billing status after session ends
+        refetchBilling();
       }
       
       toast.info("鑑定を終了しました");
@@ -131,6 +138,17 @@ const VoiceChat = () => {
   });
 
   const startConversation = useCallback(async () => {
+    // Check billing status before starting
+    if (user && !billingStatus.canStartReading) {
+      toast.error("月間利用上限に達しました", {
+        description: "来月まで新しい鑑定を開始できません",
+      });
+      return;
+    }
+
+    // Track if this is a free reading
+    isFreeReadingRef.current = isFirstFreeReading;
+
     setIsConnecting(true);
     try {
       // Request microphone with optimized settings for stability
