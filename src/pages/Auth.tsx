@@ -89,7 +89,7 @@ const Auth = () => {
             <Sparkles className="w-10 h-10 text-accent" />
           </div>
           <h1 className="text-3xl font-bold text-gradient mb-2 tracking-tight">
-            Fortune AI
+            フォーチュンボイス
           </h1>
           <p className="text-muted-foreground">
             {isLogin ? "あなたの運命への扉を開く" : "新しい旅を始める"}
