@@ -1,11 +1,19 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { toast } from "sonner";
-import { Send, Loader2, MessageCircle } from "lucide-react";
+import { Send, Loader2, MessageCircle, Ticket, Plus } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import AgentSelector, { Agent } from "./AgentSelector";
 import TextChatButton from "./TextChatButton";
 import { useAgentConfig } from "@/hooks/useAgentConfig";
@@ -24,6 +32,7 @@ interface Message {
 const MAX_RALLIES_PER_TICKET = 10;
 
 const TextChat = () => {
+  const navigate = useNavigate();
   const { agents, loading: agentsLoading } = useAgentConfig();
   const { user } = useAuth();
   const { profile } = useProfile();
@@ -36,6 +45,8 @@ const TextChat = () => {
   const [isSending, setIsSending] = useState(false);
   const [showTextInput, setShowTextInput] = useState(false);
   const [rallyCount, setRallyCount] = useState(0);
+  const [showTicketDialog, setShowTicketDialog] = useState(false);
+  const [isUsingTicket, setIsUsingTicket] = useState(false);
   const sessionIdRef = useRef<string | null>(null);
   const sessionStartRef = useRef<Date | null>(null);
   const currentAgentRef = useRef<Agent | null>(null);
@@ -105,9 +116,7 @@ const TextChat = () => {
     
     // Check if user has exceeded rally limit (unless exempt)
     if (!billingStatus.isExempt && rallyCount >= MAX_RALLIES_PER_TICKET) {
-      toast.error("このセッションの上限に達しました", {
-        description: "新しいチャットを開始するにはチケットが必要です",
-      });
+      setShowTicketDialog(true);
       return;
     }
     
@@ -166,7 +175,12 @@ const TextChat = () => {
 
       // Show warning when approaching limit
       if (!billingStatus.isExempt && newRallyCount === MAX_RALLIES_PER_TICKET - 2) {
-        toast.warning("残り2回のやり取りでこのセッションが終了します");
+        toast.warning("残り2回のやり取りでチケットが必要になります");
+      }
+      
+      // Show dialog when limit is reached
+      if (!billingStatus.isExempt && newRallyCount >= MAX_RALLIES_PER_TICKET) {
+        setShowTicketDialog(true);
       }
     } catch (error) {
       console.error("Failed to send message:", error);
@@ -175,6 +189,27 @@ const TextChat = () => {
       setIsSending(false);
     }
   }, [messages, selectedAgent, profile, rallyCount, billingStatus.isExempt, saveMessageToDb, updateSessionRallyCount]);
+
+  const handleUseTicketToContinue = useCallback(async () => {
+    if (billingStatus.ticketBalance <= 0) {
+      toast.error("チケットが不足しています");
+      return;
+    }
+
+    setIsUsingTicket(true);
+    try {
+      await useTicket();
+      setRallyCount(0); // Reset rally count
+      await refetchBilling();
+      setShowTicketDialog(false);
+      toast.success("チケットを使用しました。チャットを続けられます！");
+    } catch (error) {
+      console.error("Failed to use ticket:", error);
+      toast.error("チケットの使用に失敗しました");
+    } finally {
+      setIsUsingTicket(false);
+    }
+  }, [billingStatus.ticketBalance, useTicket, refetchBilling]);
 
   const startChat = useCallback(async () => {
     if (!selectedAgent) return;
@@ -262,6 +297,7 @@ const TextChat = () => {
     setMessages([]);
     setShowTextInput(false);
     setRallyCount(0);
+    setShowTicketDialog(false);
     toast.info("チャットを終了しました");
   }, [user, rallyCount, refetchBilling]);
 
@@ -299,6 +335,69 @@ const TextChat = () => {
 
   return (
     <div className="flex flex-col items-center gap-4 w-full max-w-xl mx-auto">
+      {/* Ticket Dialog */}
+      <Dialog open={showTicketDialog} onOpenChange={setShowTicketDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Ticket className="w-5 h-5 text-primary" />
+              チケットが必要です
+            </DialogTitle>
+            <DialogDescription>
+              {MAX_RALLIES_PER_TICKET}回のやり取りが終了しました。続けるにはチケットが必要です。
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+              <span className="text-sm">現在のチケット残高</span>
+              <Badge variant="secondary" className="text-lg px-3 py-1">
+                {billingStatus.ticketBalance} 枚
+              </Badge>
+            </div>
+
+            {billingStatus.ticketBalance > 0 ? (
+              <Button 
+                className="w-full" 
+                onClick={handleUseTicketToContinue}
+                disabled={isUsingTicket}
+              >
+                {isUsingTicket ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Ticket className="w-4 h-4 mr-2" />
+                )}
+                チケットを使って続ける（1枚消費）
+              </Button>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground text-center">
+                  チケットがありません
+                </p>
+                <Button 
+                  className="w-full" 
+                  onClick={() => {
+                    setShowTicketDialog(false);
+                    navigate("/tickets");
+                  }}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  チケットを購入する
+                </Button>
+              </div>
+            )}
+
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={endChat}
+            >
+              チャットを終了する
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Agent Selector - hide when connected */}
       {!isConnected && (
         <AgentSelector
@@ -335,7 +434,10 @@ const TextChat = () => {
           </h3>
           {/* Rally counter */}
           {!billingStatus.isExempt && (
-            <Badge variant="secondary" className="mt-2">
+            <Badge 
+              variant={rallyCount >= MAX_RALLIES_PER_TICKET - 2 ? "destructive" : "secondary"} 
+              className="mt-2"
+            >
               {rallyCount} / {MAX_RALLIES_PER_TICKET} ラリー
             </Badge>
           )}
@@ -383,18 +485,6 @@ const TextChat = () => {
               </div>
             )}
           </ScrollArea>
-
-          {/* Rally limit reached message */}
-          {isRallyLimitReached && (
-            <div className="border-t border-border/30 p-4 text-center">
-              <p className="text-sm text-muted-foreground mb-2">
-                このセッションの上限（{MAX_RALLIES_PER_TICKET}ラリー）に達しました
-              </p>
-              <Button variant="outline" size="sm" onClick={endChat}>
-                チャットを終了
-              </Button>
-            </div>
-          )}
 
           {/* Choice Buttons */}
           {!isRallyLimitReached && currentChoices && currentChoices.length > 0 && !isSending && (
