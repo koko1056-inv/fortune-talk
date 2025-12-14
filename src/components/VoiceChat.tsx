@@ -2,6 +2,7 @@ import { useConversation } from "@elevenlabs/react";
 import { useState, useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 import VoiceButton from "./VoiceButton";
 import AudioVisualizer from "./AudioVisualizer";
 import StatusIndicator from "./StatusIndicator";
@@ -11,18 +12,31 @@ import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
 import { useFortuneHistory } from "@/hooks/useFortuneHistory";
 import { useBillingStatus } from "@/hooks/useBillingStatus";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 const VoiceChat = () => {
+  const navigate = useNavigate();
   const { agents, loading: agentsLoading } = useAgentConfig();
   const { user } = useAuth();
   const { profile } = useProfile();
   const { saveReading } = useFortuneHistory();
-  const { billingStatus, isFirstFreeReading, refetch: refetchBilling } = useBillingStatus();
+  const { billingStatus, isFirstFreeReading, useTicket, refetch: refetchBilling } = useBillingStatus();
   const [isConnecting, setIsConnecting] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
+  const [showTicketDialog, setShowTicketDialog] = useState(false);
+  const [pendingSessionStart, setPendingSessionStart] = useState(false);
   const sessionStartRef = useRef<Date | null>(null);
   const currentAgentRef = useRef<Agent | null>(null);
   const isFreeReadingRef = useRef(false);
+  const ticketUsedRef = useRef(false);
 
   // Set initial selected agent when agents are loaded
   useEffect(() => {
@@ -108,6 +122,7 @@ const VoiceChat = () => {
         sessionStartRef.current = null;
         currentAgentRef.current = null;
         isFreeReadingRef.current = false;
+        ticketUsedRef.current = false;
         // Refresh billing status after session ends
         refetchBilling();
       }
@@ -126,7 +141,7 @@ const VoiceChat = () => {
         
         // Delay before reconnect attempt
         setTimeout(() => {
-          startConversation();
+          startConversationInternal();
         }, 1000 * reconnectAttemptRef.current);
       } else {
         reconnectAttemptRef.current = 0;
@@ -137,18 +152,8 @@ const VoiceChat = () => {
     },
   });
 
-  const startConversation = useCallback(async () => {
-    // Check billing status before starting
-    if (user && !billingStatus.canStartReading) {
-      toast.error("月間利用上限に達しました", {
-        description: "来月まで新しい鑑定を開始できません",
-      });
-      return;
-    }
-
-    // Track if this is a free reading
-    isFreeReadingRef.current = isFirstFreeReading;
-
+  // Internal function to actually start the session
+  const startConversationInternal = useCallback(async () => {
     setIsConnecting(true);
     try {
       // Request microphone with optimized settings for stability
@@ -217,6 +222,50 @@ const VoiceChat = () => {
     }
   }, [conversation, selectedAgent, buildDynamicPrompt, profile]);
 
+  const startConversation = useCallback(async () => {
+    // Billing exempt users can start freely
+    if (billingStatus.isExempt) {
+      isFreeReadingRef.current = false;
+      ticketUsedRef.current = false;
+      await startConversationInternal();
+      return;
+    }
+
+    // First free reading
+    if (isFirstFreeReading) {
+      isFreeReadingRef.current = true;
+      ticketUsedRef.current = false;
+      await startConversationInternal();
+      return;
+    }
+
+    // Check if user has tickets
+    if (billingStatus.ticketBalance > 0) {
+      // Use a ticket and start
+      try {
+        const success = await useTicket();
+        if (success) {
+          isFreeReadingRef.current = false;
+          ticketUsedRef.current = true;
+          toast.success("チケットを1枚使用しました", {
+            description: `残り${billingStatus.ticketBalance - 1}枚`,
+          });
+          await startConversationInternal();
+        } else {
+          toast.error("チケットの使用に失敗しました");
+        }
+      } catch (error) {
+        console.error("Failed to use ticket:", error);
+        toast.error("チケットの使用に失敗しました");
+      }
+      return;
+    }
+
+    // No tickets available - show dialog
+    setShowTicketDialog(true);
+    setPendingSessionStart(true);
+  }, [billingStatus, isFirstFreeReading, useTicket, startConversationInternal]);
+
   const stopConversation = useCallback(async () => {
     await conversation.endSession();
   }, [conversation]);
@@ -227,6 +276,17 @@ const VoiceChat = () => {
     } else {
       startConversation();
     }
+  };
+
+  const handlePurchaseTickets = () => {
+    setShowTicketDialog(false);
+    setPendingSessionStart(false);
+    navigate('/tickets');
+  };
+
+  const handleCloseTicketDialog = () => {
+    setShowTicketDialog(false);
+    setPendingSessionStart(false);
   };
 
   const isConnected = conversation.status === "connected";
@@ -330,6 +390,42 @@ const VoiceChat = () => {
         status={isConnecting ? "connecting" : conversation.status}
         isSpeaking={conversation.isSpeaking}
       />
+
+      {/* Ticket Balance Display */}
+      {user && !billingStatus.isExempt && !isConnected && (
+        <div className="text-center text-sm text-muted-foreground">
+          {isFirstFreeReading ? (
+            <span className="text-accent">🎁 初回無料鑑定が利用できます</span>
+          ) : (
+            <span>🎫 チケット残高: {billingStatus.ticketBalance}枚</span>
+          )}
+        </div>
+      )}
+
+      {/* Ticket Purchase Dialog */}
+      <Dialog open={showTicketDialog} onOpenChange={setShowTicketDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>チケットが必要です</DialogTitle>
+            <DialogDescription>
+              音声占いを利用するにはチケットが必要です。チケットを購入して鑑定を開始しましょう。
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-muted-foreground text-center">
+              現在のチケット残高: <span className="font-bold text-foreground">{billingStatus.ticketBalance}枚</span>
+            </p>
+          </div>
+          <DialogFooter className="flex-col gap-2 sm:flex-row">
+            <Button variant="outline" onClick={handleCloseTicketDialog}>
+              キャンセル
+            </Button>
+            <Button onClick={handlePurchaseTickets}>
+              チケットを購入する
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
