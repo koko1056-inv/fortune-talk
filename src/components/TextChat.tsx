@@ -12,6 +12,7 @@ import { useAgentConfig } from "@/hooks/useAgentConfig";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
 import { useFortuneHistory } from "@/hooks/useFortuneHistory";
+import { useBillingStatus } from "@/hooks/useBillingStatus";
 
 interface Message {
   id: string;
@@ -24,6 +25,7 @@ const TextChat = () => {
   const { user } = useAuth();
   const { profile } = useProfile();
   const { saveReading } = useFortuneHistory();
+  const { billingStatus, isFirstFreeReading, refetch: refetchBilling } = useBillingStatus();
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
@@ -32,6 +34,7 @@ const TextChat = () => {
   const [isSending, setIsSending] = useState(false);
   const sessionStartRef = useRef<Date | null>(null);
   const currentAgentRef = useRef<Agent | null>(null);
+  const isFreeReadingRef = useRef(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -113,10 +116,13 @@ const TextChat = () => {
           currentAgentRef.current.name,
           currentAgentRef.current.emoji,
           sessionStartRef.current,
-          endTime
+          endTime,
+          isFreeReadingRef.current
         );
         sessionStartRef.current = null;
         currentAgentRef.current = null;
+        isFreeReadingRef.current = false;
+        refetchBilling();
       }
       
       toast.info("チャットを終了しました");
@@ -148,6 +154,17 @@ const TextChat = () => {
 
   const startChat = useCallback(async () => {
     if (!selectedAgent) return;
+    
+    // Check billing status before starting
+    if (user && !billingStatus.canStartReading) {
+      toast.error("月間利用上限に達しました", {
+        description: "来月まで新しい鑑定を開始できません",
+      });
+      return;
+    }
+
+    // Track if this is a free reading
+    isFreeReadingRef.current = isFirstFreeReading;
     
     setIsConnecting(true);
     try {
