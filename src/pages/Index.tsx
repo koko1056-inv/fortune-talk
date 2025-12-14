@@ -85,7 +85,7 @@ const Index = () => {
           </p>
           
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold tracking-wide text-foreground">
-            <span className="text-gradient drop-shadow-[0_0_30px_hsl(45_80%_55%/0.5)]">フォーチュンボイス</span>
+            <span className="text-gradient drop-shadow-[0_0_30px_hsl(45_80%_55%/0.5)]">フォーチュントーク</span>
           </h1>
           
           <p className="mt-3 md:mt-5 text-base md:text-lg text-muted-foreground font-light tracking-wider">
