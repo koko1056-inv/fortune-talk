@@ -81,7 +81,7 @@ const Index = () => {
           </div>
           
           <p className="text-xs md:text-sm text-accent tracking-[0.3em] md:tracking-[0.4em] uppercase mb-2 md:mb-3 font-display animate-shimmer inline-block">
-            ✧ Fortune Voice ✧
+            ✧ Fortune Talk ✧
           </p>
           
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold tracking-wide text-foreground">
