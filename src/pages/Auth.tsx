@@ -90,7 +90,7 @@ const Auth = () => {
             <img src={fortuneTellerImage} alt="Fortune Teller" className="w-full h-full object-cover" />
           </div>
           <h1 className="text-3xl font-bold text-gradient mb-2 tracking-tight">
-            フォーチュンボイス
+            フォーチュントーク
           </h1>
           <p className="text-muted-foreground">
             {isLogin ? "あなたの運命への扉を開く" : "新しい旅を始める"}
