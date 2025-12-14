@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import StarField from "@/components/StarField";
 import { useAuth } from "@/hooks/useAuth";
+import { useAgentConfig } from "@/hooks/useAgentConfig";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -50,6 +51,7 @@ interface ChatSession {
 const ChatHistory = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
+  const { agents } = useAgentConfig();
   const [expandedSessions, setExpandedSessions] = useState<Set<string>>(new Set());
   const [loadingMessages, setLoadingMessages] = useState<Set<string>>(new Set());
 
@@ -178,6 +180,7 @@ const ChatHistory = () => {
               const isExpanded = expandedSessions.has(session.id);
               const isLoadingMsgs = loadingMessages.has(session.id);
               const messages = sessionMessages[session.id] || [];
+              const agentConfig = agents.find(a => a.name === session.agent_name);
 
               return (
                 <Collapsible
@@ -188,8 +191,16 @@ const ChatHistory = () => {
                   <div className="glass-surface rounded-xl overflow-hidden">
                     <CollapsibleTrigger asChild>
                       <button className="w-full p-4 flex items-center gap-4 hover:bg-muted/20 transition-colors text-left">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center text-2xl shrink-0">
-                          {session.agent_emoji || "🔮"}
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center text-2xl shrink-0 overflow-hidden">
+                          {agentConfig?.imageUrl ? (
+                            <img 
+                              src={agentConfig.imageUrl} 
+                              alt={session.agent_name} 
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            session.agent_emoji || "🔮"
+                          )}
                         </div>
                         
                         <div className="flex-1 min-w-0">
