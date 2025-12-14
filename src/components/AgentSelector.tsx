@@ -1,9 +1,7 @@
 import { cn } from "@/lib/utils";
-import { Link } from "react-router-dom";
-import { Settings, AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { AgentConfig } from "@/hooks/useAgentConfig";
 import { useMemo, useRef, useCallback } from "react";
-import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 export type Agent = AgentConfig;
 interface AgentSelectorProps {
@@ -18,7 +16,6 @@ const AgentSelector = ({
   onSelect,
   disabled
 }: AgentSelectorProps) => {
-  const { isAdmin } = useIsAdmin();
   const selectedIndex = useMemo(() => agents.findIndex(a => a.id === selectedAgent.id), [agents, selectedAgent.id]);
 
   // Swipe handling
@@ -88,16 +85,6 @@ const AgentSelector = ({
     offset: getCircularOffset(index)
   }));
   return <div className="w-full flex flex-col items-center">
-      {/* Header */}
-      <div className="flex items-center justify-between w-full max-w-sm px-4 mb-4 md:mb-8">
-        
-        {isAdmin && (
-          <Link to="/settings" className="flex items-center gap-1 md:gap-1.5 text-xs text-muted-foreground hover:text-accent transition-colors ml-auto">
-            <Settings className="w-3 h-3 md:w-3.5 md:h-3.5" />
-            <span className="hidden sm:inline">設定</span>
-          </Link>
-        )}
-      </div>
 
       {/* Carousel with swipe support */}
       <div ref={containerRef} className="relative w-full h-48 md:h-64 flex items-center justify-center touch-pan-y select-none" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
