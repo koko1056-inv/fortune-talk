@@ -78,7 +78,7 @@ export const DailyFortuneCard = () => {
             <div className="absolute inset-0 blur-md bg-accent/30 rounded-full animate-pulse" />
             <Sparkles className="w-5 h-5 text-accent relative z-10" />
           </div>
-          <span className="text-base font-medium text-foreground/90">今日の運勢を見る</span>
+          <span className="text-base font-medium text-foreground/90">フォーチュントーク</span>
           <div className="flex gap-0.5 ml-2">
             {[1, 2, 3].map((i) => (
               <span 
