@@ -57,7 +57,7 @@ const TextChatButton = ({
           "font-display font-semibold tracking-wider text-sm md:text-base",
           isConnected ? "text-red-200" : "text-foreground"
         )}>
-          {isConnecting ? "接続中..." : isConnected ? "チャットを終了" : "チャットを始める"}
+          {isConnecting ? "接続中..." : isConnected ? "占いを終了" : "占いを始める"}
         </span>
       </button>
       
