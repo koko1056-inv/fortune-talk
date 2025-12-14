@@ -5,12 +5,12 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 import AgentSelector, { Agent } from "./AgentSelector";
 import TextChatButton from "./TextChatButton";
 import { useAgentConfig } from "@/hooks/useAgentConfig";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
-import { useFortuneHistory } from "@/hooks/useFortuneHistory";
 import { useBillingStatus } from "@/hooks/useBillingStatus";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -21,12 +21,13 @@ interface Message {
   choices?: string[];
 }
 
+const MAX_RALLIES_PER_TICKET = 10;
+
 const TextChat = () => {
   const { agents, loading: agentsLoading } = useAgentConfig();
   const { user } = useAuth();
   const { profile } = useProfile();
-  const { saveReading } = useFortuneHistory();
-  const { billingStatus, isFirstFreeReading, refetch: refetchBilling } = useBillingStatus();
+  const { billingStatus, isFirstFreeReading, useTicket, refetch: refetchBilling } = useBillingStatus();
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
@@ -34,9 +35,12 @@ const TextChat = () => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [showTextInput, setShowTextInput] = useState(false);
+  const [rallyCount, setRallyCount] = useState(0);
+  const sessionIdRef = useRef<string | null>(null);
   const sessionStartRef = useRef<Date | null>(null);
   const currentAgentRef = useRef<Agent | null>(null);
   const isFreeReadingRef = useRef(false);
+  const ticketUsedRef = useRef(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Set initial selected agent when agents are loaded
@@ -64,8 +68,48 @@ const TextChat = () => {
     }
   }, [messages]);
 
+  const saveMessageToDb = useCallback(async (
+    sessionId: string,
+    role: "user" | "assistant",
+    content: string,
+    choices?: string[]
+  ) => {
+    if (!user) return;
+    
+    try {
+      await supabase.from("chat_messages").insert({
+        session_id: sessionId,
+        user_id: user.id,
+        role,
+        content,
+        choices: choices || null,
+      });
+    } catch (error) {
+      console.error("Failed to save message:", error);
+    }
+  }, [user]);
+
+  const updateSessionRallyCount = useCallback(async (sessionId: string, count: number) => {
+    try {
+      await supabase
+        .from("chat_sessions")
+        .update({ rally_count: count })
+        .eq("id", sessionId);
+    } catch (error) {
+      console.error("Failed to update rally count:", error);
+    }
+  }, []);
+
   const sendMessageToAI = useCallback(async (userMessage: string) => {
-    if (!selectedAgent) return;
+    if (!selectedAgent || !sessionIdRef.current) return;
+    
+    // Check if user has exceeded rally limit (unless exempt)
+    if (!billingStatus.isExempt && rallyCount >= MAX_RALLIES_PER_TICKET) {
+      toast.error("このセッションの上限に達しました", {
+        description: "新しいチャットを開始するにはチケットが必要です",
+      });
+      return;
+    }
     
     setIsSending(true);
 
@@ -77,6 +121,9 @@ const TextChat = () => {
     };
     setMessages(prev => [...prev, userMsg]);
     setShowTextInput(false);
+
+    // Save user message to database
+    await saveMessageToDb(sessionIdRef.current, "user", userMessage);
 
     try {
       const chatMessages = messages.map(m => ({
@@ -108,19 +155,32 @@ const TextChat = () => {
         choices: data.choices?.length > 0 ? data.choices : undefined,
       };
       setMessages(prev => [...prev, assistantMsg]);
+
+      // Save assistant message to database
+      await saveMessageToDb(sessionIdRef.current!, "assistant", data.content, data.choices);
+
+      // Increment rally count
+      const newRallyCount = rallyCount + 1;
+      setRallyCount(newRallyCount);
+      await updateSessionRallyCount(sessionIdRef.current!, newRallyCount);
+
+      // Show warning when approaching limit
+      if (!billingStatus.isExempt && newRallyCount === MAX_RALLIES_PER_TICKET - 2) {
+        toast.warning("残り2回のやり取りでこのセッションが終了します");
+      }
     } catch (error) {
       console.error("Failed to send message:", error);
       toast.error("メッセージの送信に失敗しました");
     } finally {
       setIsSending(false);
     }
-  }, [messages, selectedAgent, profile]);
+  }, [messages, selectedAgent, profile, rallyCount, billingStatus.isExempt, saveMessageToDb, updateSessionRallyCount]);
 
   const startChat = useCallback(async () => {
     if (!selectedAgent) return;
     
-    // Check billing status before starting
-    if (user && !billingStatus.canStartReading) {
+    // Check billing status before starting (unless exempt or first free reading)
+    if (user && !billingStatus.isExempt && !isFirstFreeReading && billingStatus.ticketBalance <= 0) {
       toast.error("チケットが不足しています", {
         description: "チケットを購入してください",
       });
@@ -129,14 +189,41 @@ const TextChat = () => {
 
     // Track if this is a free reading
     isFreeReadingRef.current = isFirstFreeReading;
+    ticketUsedRef.current = false;
     
     setIsConnecting(true);
     
     try {
       sessionStartRef.current = new Date();
       currentAgentRef.current = selectedAgent;
+      
+      // Create chat session in database
+      if (user) {
+        const { data: sessionData, error: sessionError } = await supabase
+          .from("chat_sessions")
+          .insert({
+            user_id: user.id,
+            agent_name: selectedAgent.name,
+            agent_emoji: selectedAgent.emoji,
+            started_at: new Date().toISOString(),
+            ticket_used: !billingStatus.isExempt && !isFirstFreeReading,
+          })
+          .select()
+          .single();
+
+        if (sessionError) throw sessionError;
+        sessionIdRef.current = sessionData.id;
+
+        // Use a ticket if not exempt and not first free reading
+        if (!billingStatus.isExempt && !isFirstFreeReading) {
+          await useTicket();
+          ticketUsedRef.current = true;
+        }
+      }
+      
       setIsConnected(true);
       setIsConnecting(false);
+      setRallyCount(0);
       
       const profileInfo = profile?.display_name 
         ? `${profile.display_name}さん、${selectedAgent.name}とのチャットを開始しました`
@@ -150,29 +237,33 @@ const TextChat = () => {
       setIsConnecting(false);
       toast.error("接続に失敗しました");
     }
-  }, [selectedAgent, user, billingStatus, isFirstFreeReading, profile, sendMessageToAI]);
+  }, [selectedAgent, user, billingStatus, isFirstFreeReading, profile, sendMessageToAI, useTicket]);
 
   const endChat = useCallback(async () => {
-    if (user && sessionStartRef.current && currentAgentRef.current) {
-      const endTime = new Date();
-      await saveReading(
-        currentAgentRef.current.name,
-        currentAgentRef.current.emoji,
-        sessionStartRef.current,
-        endTime,
-        isFreeReadingRef.current
-      );
+    if (user && sessionIdRef.current) {
+      // Update session end time
+      await supabase
+        .from("chat_sessions")
+        .update({ 
+          ended_at: new Date().toISOString(),
+          rally_count: rallyCount,
+        })
+        .eq("id", sessionIdRef.current);
+      
+      sessionIdRef.current = null;
       sessionStartRef.current = null;
       currentAgentRef.current = null;
       isFreeReadingRef.current = false;
+      ticketUsedRef.current = false;
       refetchBilling();
     }
     
     setIsConnected(false);
     setMessages([]);
     setShowTextInput(false);
+    setRallyCount(0);
     toast.info("チャットを終了しました");
-  }, [user, saveReading, refetchBilling]);
+  }, [user, rallyCount, refetchBilling]);
 
   const handleChoiceSelect = useCallback((choice: string) => {
     sendMessageToAI(choice);
@@ -204,6 +295,7 @@ const TextChat = () => {
   // Get the last message's choices
   const lastMessage = messages[messages.length - 1];
   const currentChoices = lastMessage?.role === "assistant" ? lastMessage.choices : undefined;
+  const isRallyLimitReached = !billingStatus.isExempt && rallyCount >= MAX_RALLIES_PER_TICKET;
 
   return (
     <div className="flex flex-col items-center gap-4 w-full max-w-xl mx-auto">
@@ -241,6 +333,12 @@ const TextChat = () => {
           <h3 className="text-lg font-display font-bold text-gradient">
             {currentAgentRef.current.name}
           </h3>
+          {/* Rally counter */}
+          {!billingStatus.isExempt && (
+            <Badge variant="secondary" className="mt-2">
+              {rallyCount} / {MAX_RALLIES_PER_TICKET} ラリー
+            </Badge>
+          )}
         </div>
       )}
 
@@ -286,8 +384,20 @@ const TextChat = () => {
             )}
           </ScrollArea>
 
+          {/* Rally limit reached message */}
+          {isRallyLimitReached && (
+            <div className="border-t border-border/30 p-4 text-center">
+              <p className="text-sm text-muted-foreground mb-2">
+                このセッションの上限（{MAX_RALLIES_PER_TICKET}ラリー）に達しました
+              </p>
+              <Button variant="outline" size="sm" onClick={endChat}>
+                チャットを終了
+              </Button>
+            </div>
+          )}
+
           {/* Choice Buttons */}
-          {currentChoices && currentChoices.length > 0 && !isSending && (
+          {!isRallyLimitReached && currentChoices && currentChoices.length > 0 && !isSending && (
             <div className="border-t border-border/30 p-3 space-y-2">
               <p className="text-xs text-muted-foreground text-center mb-2">
                 選択肢を選ぶか、自由に入力してください
@@ -344,7 +454,7 @@ const TextChat = () => {
           )}
 
           {/* Initial input when no choices yet */}
-          {(!currentChoices || currentChoices.length === 0) && !isSending && messages.length > 0 && (
+          {!isRallyLimitReached && (!currentChoices || currentChoices.length === 0) && !isSending && messages.length > 0 && (
             <div className="border-t border-border/30 p-3">
               <div className="flex gap-2">
                 <Textarea
