@@ -10,7 +10,15 @@ interface ConnectedAgentDisplayProps {
   rallyCount?: number;
   maxRallies?: number;
   showRallyCounter?: boolean;
+  elapsedSeconds?: number;
+  maxSeconds?: number;
 }
+
+const formatTime = (seconds: number) => {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+};
 
 const ConnectedAgentDisplay = memo(({
   agent,
@@ -19,6 +27,8 @@ const ConnectedAgentDisplay = memo(({
   rallyCount,
   maxRallies,
   showRallyCounter = false,
+  elapsedSeconds,
+  maxSeconds,
 }: ConnectedAgentDisplayProps) => {
   const isLarge = variant === "large";
   const sizeClasses = isLarge 
@@ -30,6 +40,10 @@ const ConnectedAgentDisplay = memo(({
   const titleClasses = isLarge 
     ? "text-xl md:text-2xl" 
     : "text-lg";
+
+  const showTimer = elapsedSeconds !== undefined && maxSeconds !== undefined;
+  const timeRemaining = showTimer ? maxSeconds - elapsedSeconds : 0;
+  const isTimeWarning = showTimer && timeRemaining <= 30;
 
   return (
     <div className="text-center animate-fade-in">
@@ -76,6 +90,14 @@ const ConnectedAgentDisplay = memo(({
           className="mt-2"
         >
           {rallyCount} / {maxRallies} ラリー
+        </Badge>
+      )}
+      {showTimer && (
+        <Badge
+          variant={isTimeWarning ? "destructive" : "secondary"}
+          className="mt-2"
+        >
+          残り {formatTime(timeRemaining)}
         </Badge>
       )}
     </div>
