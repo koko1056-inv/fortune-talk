@@ -16,6 +16,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useFortuneHistory } from "@/hooks/useFortuneHistory";
 import { useBillingStatus } from "@/hooks/useBillingStatus";
 
+const MAX_SECONDS_PER_TICKET = 180; // 3 minutes per ticket
+
 const VoiceChat = () => {
   const navigate = useNavigate();
   const { agents, loading: agentsLoading } = useAgentConfig();
@@ -26,10 +28,13 @@ const VoiceChat = () => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [showTicketDialog, setShowTicketDialog] = useState(false);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [isUsingTicket, setIsUsingTicket] = useState(false);
   const sessionStartRef = useRef<Date | null>(null);
   const currentAgentRef = useRef<Agent | null>(null);
   const isFreeReadingRef = useRef(false);
   const reconnectAttemptRef = useRef(0);
+  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const maxReconnectAttempts = 3;
 
   // Set initial selected agent when agents are loaded
@@ -67,12 +72,46 @@ const VoiceChat = () => {
     return `【相談者のプロフィール情報】\n${parts.join('\n')}\n\nこの情報を参考にして、パーソナライズされた占いを提供してください。`;
   }, [profile]);
 
+  // Start timer when connected
+  const startTimer = useCallback(() => {
+    setElapsedSeconds(0);
+    timerIntervalRef.current = setInterval(() => {
+      setElapsedSeconds(prev => {
+        const newValue = prev + 1;
+        // Warning at 30 seconds remaining
+        if (!billingStatus.isExempt && newValue === MAX_SECONDS_PER_TICKET - 30) {
+          toast.warning("残り30秒です");
+        }
+        return newValue;
+      });
+    }, 1000);
+  }, [billingStatus.isExempt]);
+
+  const stopTimer = useCallback(() => {
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current);
+      timerIntervalRef.current = null;
+    }
+  }, []);
+
+  const [isConnected, setIsConnectedState] = useState(false);
+
+  // Check if time limit reached
+  useEffect(() => {
+    if (!billingStatus.isExempt && elapsedSeconds >= MAX_SECONDS_PER_TICKET && isConnected) {
+      setShowTicketDialog(true);
+      stopTimer();
+    }
+  }, [elapsedSeconds, billingStatus.isExempt, isConnected, stopTimer]);
+
   const conversation = useConversation({
     onConnect: () => {
       console.log("Connected to agent");
       reconnectAttemptRef.current = 0;
       sessionStartRef.current = new Date();
       currentAgentRef.current = selectedAgent;
+      setIsConnectedState(true);
+      startTimer();
 
       const profileInfo = profile?.display_name
         ? `${profile.display_name}さん、${selectedAgent?.name}と接続しました`
@@ -81,6 +120,9 @@ const VoiceChat = () => {
     },
     onDisconnect: () => {
       console.log("Disconnected from agent");
+      setIsConnectedState(false);
+      stopTimer();
+      setElapsedSeconds(0);
       if (user && sessionStartRef.current && currentAgentRef.current) {
         saveReading(
           currentAgentRef.current.name,
@@ -190,7 +232,7 @@ const VoiceChat = () => {
     conversation.status === "connected" ? stopConversation() : startConversation();
   };
 
-  const isConnected = conversation.status === "connected";
+  const isConversationConnected = conversation.status === "connected";
 
   if (agentsLoading || !selectedAgent) {
     return (
@@ -213,7 +255,7 @@ const VoiceChat = () => {
 
   return (
     <div className="flex flex-col items-center gap-6 md:gap-10 w-full">
-      {!isConnected && (
+      {!isConversationConnected && (
         <AgentSelector
           agents={agents}
           selectedAgent={selectedAgent}
@@ -222,20 +264,22 @@ const VoiceChat = () => {
         />
       )}
 
-      {isConnected && currentAgentRef.current && (
+      {isConversationConnected && currentAgentRef.current && (
         <ConnectedAgentDisplay
           agent={currentAgentRef.current}
           displayName={profile?.display_name}
           variant="large"
+          elapsedSeconds={!billingStatus.isExempt ? elapsedSeconds : undefined}
+          maxSeconds={!billingStatus.isExempt ? MAX_SECONDS_PER_TICKET : undefined}
         />
       )}
 
-      {!isConnected && !user && <ProfileHint />}
+      {!isConversationConnected && !user && <ProfileHint />}
 
-      <AudioVisualizer isActive={isConnected} isSpeaking={conversation.isSpeaking} />
+      <AudioVisualizer isActive={isConversationConnected} isSpeaking={conversation.isSpeaking} />
 
       <VoiceButton
-        isConnected={isConnected}
+        isConnected={isConversationConnected}
         isConnecting={isConnecting}
         isSpeaking={conversation.isSpeaking}
         onClick={handleButtonClick}
@@ -246,7 +290,7 @@ const VoiceChat = () => {
         isSpeaking={conversation.isSpeaking}
       />
 
-      {user && !billingStatus.isExempt && !isConnected && (
+      {user && !billingStatus.isExempt && !isConversationConnected && (
         <TicketBalanceDisplay
           isFirstFreeReading={isFirstFreeReading}
           ticketBalance={billingStatus.ticketBalance}
@@ -258,10 +302,20 @@ const VoiceChat = () => {
         onOpenChange={setShowTicketDialog}
         ticketBalance={billingStatus.ticketBalance}
         onUseTicket={async () => {
-          const success = await useTicket();
-          if (success) {
-            setShowTicketDialog(false);
-            await startConversationInternal();
+          setIsUsingTicket(true);
+          try {
+            const success = await useTicket();
+            if (success) {
+              setElapsedSeconds(0);
+              startTimer();
+              setShowTicketDialog(false);
+              toast.success("チケットを使用しました。続けて占いをお楽しみください！");
+            }
+          } catch (error) {
+            console.error("Failed to use ticket:", error);
+            toast.error("チケットの使用に失敗しました");
+          } finally {
+            setIsUsingTicket(false);
           }
         }}
         onPurchase={() => {
@@ -269,8 +323,11 @@ const VoiceChat = () => {
           navigate('/tickets');
         }}
         onCancel={() => setShowTicketDialog(false)}
-        title="チケットが必要です"
-        description="音声占いを利用するにはチケットが必要です。チケットを購入して鑑定を開始しましょう。"
+        isUsingTicket={isUsingTicket}
+        title="時間切れです"
+        description={`${MAX_SECONDS_PER_TICKET / 60}分経過しました。続けるにはチケットが必要です。`}
+        showEndOption
+        onEnd={stopConversation}
       />
     </div>
   );
