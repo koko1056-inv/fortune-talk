@@ -32,7 +32,7 @@ export const TicketPurchase = ({ currentBalance, onPurchaseRequest }: TicketPurc
           <span className="text-muted-foreground">枚</span>
         </div>
         <p className="text-sm text-muted-foreground">現在のチケット残高</p>
-        <p className="text-xs text-muted-foreground mt-1">1枚 = 3分の占い</p>
+        <p className="text-xs text-muted-foreground mt-1">チャット: 1枚 = 10ラリー（やり取り）</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -57,7 +57,7 @@ export const TicketPurchase = ({ currentBalance, onPurchaseRequest }: TicketPurc
                 {pkg.amount}枚
               </CardTitle>
               <CardDescription>
-                {pkg.amount * 3}分の占いが可能
+                チャット{pkg.amount * 10}ラリー分
               </CardDescription>
             </CardHeader>
             <CardContent>
