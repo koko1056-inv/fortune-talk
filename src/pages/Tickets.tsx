@@ -30,7 +30,7 @@ const Tickets = () => {
       
       <div className="relative z-10 container mx-auto px-4 py-8 max-w-2xl">
         <div className="flex items-center gap-4 mb-8">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="hover-scale">
+          <Button variant="ghost" size="icon" onClick={() => navigate('/')} className="hover-scale">
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
