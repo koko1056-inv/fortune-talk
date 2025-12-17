@@ -9,6 +9,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { User, LogIn, ScrollText, Ticket, MessageSquare, Settings } from "lucide-react";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { DailyFortuneCard } from "@/components/DailyFortuneCard";
+import { BackgroundMusic } from "@/components/BackgroundMusic";
 
 const SettingsLink = () => {
   const { isAdmin } = useIsAdmin();
@@ -28,6 +29,9 @@ const Index = () => {
     profile
   } = useProfile();
   return <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden">
+      {/* Background Music */}
+      <BackgroundMusic />
+      
       {/* Animated star field background */}
       <StarField />
       
