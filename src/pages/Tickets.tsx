@@ -1,9 +1,9 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useBillingStatus } from '@/hooks/useBillingStatus';
 import { TicketPurchase } from '@/components/TicketPurchase';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Sparkles } from 'lucide-react';
+import { ArrowLeft, Sparkles, FileText } from 'lucide-react';
 import StarField from '@/components/StarField';
 
 const Tickets = () => {
@@ -64,6 +64,16 @@ const Tickets = () => {
               購入したチケットに有効期限はありません
             </li>
           </ul>
+        </div>
+
+        <div className="mt-6 text-center">
+          <Link 
+            to="/commercial-transaction" 
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <FileText className="h-4 w-4" />
+            特定商取引法に基づく表記
+          </Link>
         </div>
       </div>
     </div>
