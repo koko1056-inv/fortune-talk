@@ -274,9 +274,16 @@ const VoiceChat = () => {
         />
       )}
 
-      {!isConversationConnected && !user && <ProfileHint />}
+      {isConversationConnected && (
+        <AudioVisualizer isActive={isConversationConnected} isSpeaking={conversation.isSpeaking} />
+      )}
 
-      <AudioVisualizer isActive={isConversationConnected} isSpeaking={conversation.isSpeaking} />
+      {isConversationConnected && (
+        <StatusIndicator
+          status={isConnecting ? "connecting" : conversation.status}
+          isSpeaking={conversation.isSpeaking}
+        />
+      )}
 
       <VoiceButton
         isConnected={isConversationConnected}
@@ -285,10 +292,7 @@ const VoiceChat = () => {
         onClick={handleButtonClick}
       />
 
-      <StatusIndicator
-        status={isConnecting ? "connecting" : conversation.status}
-        isSpeaking={conversation.isSpeaking}
-      />
+      {!isConversationConnected && !user && <ProfileHint />}
 
       {user && !billingStatus.isExempt && !isConversationConnected && (
         <TicketBalanceDisplay
