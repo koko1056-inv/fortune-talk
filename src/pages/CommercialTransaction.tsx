@@ -30,32 +30,32 @@ const CommercialTransaction = () => {
           <div className="space-y-4 text-sm">
             <div className="border-b border-border/30 pb-3">
               <p className="text-muted-foreground mb-1">販売事業者名</p>
-              <p className="font-medium">【事業者名を入力してください】</p>
+              <p className="font-medium">MGC株式会社</p>
             </div>
 
             <div className="border-b border-border/30 pb-3">
               <p className="text-muted-foreground mb-1">運営責任者</p>
-              <p className="font-medium">【責任者名を入力してください】</p>
+              <p className="font-medium">松尾心夢</p>
             </div>
 
             <div className="border-b border-border/30 pb-3">
               <p className="text-muted-foreground mb-1">所在地</p>
-              <p className="font-medium">【住所を入力してください】</p>
+              <p className="font-medium">京都市上京区西辰巳町111 106</p>
             </div>
 
             <div className="border-b border-border/30 pb-3">
               <p className="text-muted-foreground mb-1">電話番号</p>
-              <p className="font-medium">【電話番号を入力してください】</p>
+              <p className="font-medium">090-8353-1056</p>
             </div>
 
             <div className="border-b border-border/30 pb-3">
               <p className="text-muted-foreground mb-1">メールアドレス</p>
-              <p className="font-medium">【メールアドレスを入力してください】</p>
+              <p className="font-medium">support@fortune-voice.com</p>
             </div>
 
             <div className="border-b border-border/30 pb-3">
               <p className="text-muted-foreground mb-1">販売価格</p>
-              <p className="font-medium">各商品ページに記載</p>
+              <p className="font-medium">商品ページに記載</p>
             </div>
 
             <div className="border-b border-border/30 pb-3">
