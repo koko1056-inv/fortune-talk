@@ -158,6 +158,7 @@ export type Database = {
           fortune_date: string
           id: string
           lucky_color: string | null
+          lucky_item: string | null
           lucky_number: number | null
           overall_luck: number | null
           user_id: string
@@ -168,6 +169,7 @@ export type Database = {
           fortune_date?: string
           id?: string
           lucky_color?: string | null
+          lucky_item?: string | null
           lucky_number?: number | null
           overall_luck?: number | null
           user_id: string
@@ -178,6 +180,7 @@ export type Database = {
           fortune_date?: string
           id?: string
           lucky_color?: string | null
+          lucky_item?: string | null
           lucky_number?: number | null
           overall_luck?: number | null
           user_id?: string

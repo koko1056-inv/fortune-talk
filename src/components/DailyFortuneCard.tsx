@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useDailyFortune } from '@/hooks/useDailyFortune';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { Sparkles, Star, Palette, Hash, Loader2 } from 'lucide-react';
+import { Sparkles, Star, Palette, Hash, Loader2, Gift } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 
@@ -137,7 +137,7 @@ export const DailyFortuneCard = () => {
 
               {/* Lucky items */}
               <div className={cn(
-                'flex justify-center gap-4 transition-all duration-500 delay-800',
+                'flex flex-wrap justify-center gap-3 transition-all duration-500 delay-800',
                 isRevealing ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
               )}>
                 {fortune.lucky_color && (
@@ -150,6 +150,12 @@ export const DailyFortuneCard = () => {
                   <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 border border-accent/20">
                     <Hash className="w-4 h-4 text-accent" />
                     <span className="text-sm text-foreground/80">{fortune.lucky_number}</span>
+                  </div>
+                )}
+                {fortune.lucky_item && (
+                  <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/30 border border-secondary/40">
+                    <Gift className="w-4 h-4 text-accent" />
+                    <span className="text-sm text-foreground/80">{fortune.lucky_item}</span>
                   </div>
                 )}
               </div>
