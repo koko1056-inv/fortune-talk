@@ -67,7 +67,7 @@ serve(async (req) => {
     const bloodInfo = profile?.blood_type ? `血液型: ${profile.blood_type}` : '';
     const nameInfo = profile?.display_name ? `名前: ${profile.display_name}さん` : '';
 
-    const systemPrompt = `あなたは神秘的で優しい占い師です。毎日の運勢を占います。
+const systemPrompt = `あなたは神秘的で優しい占い師です。毎日の運勢を占います。
 ユーザーの情報を元に、パーソナライズされた今日の運勢を日本語で提供してください。
 
 以下のJSON形式で回答してください（JSONのみ、他のテキストは不要）：
@@ -75,6 +75,7 @@ serve(async (req) => {
   "content": "今日の運勢のメッセージ（100-150文字程度）",
   "lucky_color": "ラッキーカラー（日本語で）",
   "lucky_number": ラッキーナンバー（1-99の整数）,
+  "lucky_item": "ラッキーアイテム（日本語で、具体的な物）",
   "overall_luck": 総合運（1-5の整数、5が最高）
 }`;
 
@@ -132,6 +133,7 @@ ${bloodInfo}
         content: '今日は穏やかな一日になりそうです。心を落ち着けて過ごしましょう。',
         lucky_color: '青',
         lucky_number: Math.floor(Math.random() * 99) + 1,
+        lucky_item: 'ハンカチ',
         overall_luck: 3,
       };
     }
@@ -145,6 +147,7 @@ ${bloodInfo}
         content: fortuneData.content,
         lucky_color: fortuneData.lucky_color,
         lucky_number: fortuneData.lucky_number,
+        lucky_item: fortuneData.lucky_item,
         overall_luck: fortuneData.overall_luck,
       })
       .select()

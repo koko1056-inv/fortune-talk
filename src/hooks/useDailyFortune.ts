@@ -9,6 +9,7 @@ interface DailyFortune {
   content: string;
   lucky_color: string | null;
   lucky_number: number | null;
+  lucky_item: string | null;
   overall_luck: number | null;
   created_at: string;
 }
