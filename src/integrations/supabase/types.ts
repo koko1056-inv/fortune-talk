@@ -230,6 +230,7 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          tutorial_completed: boolean | null
           updated_at: string
           user_id: string
           zodiac_sign: string | null
@@ -240,6 +241,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          tutorial_completed?: boolean | null
           updated_at?: string
           user_id: string
           zodiac_sign?: string | null
@@ -250,6 +252,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          tutorial_completed?: boolean | null
           updated_at?: string
           user_id?: string
           zodiac_sign?: string | null
