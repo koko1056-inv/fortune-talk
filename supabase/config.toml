@@ -1,0 +1,7 @@
+project_id = "jiewcrerwwxqqducstbq"
+
+[functions.fortune-chat]
+verify_jwt = false
+
+[functions.daily-fortune]
+verify_jwt = true
