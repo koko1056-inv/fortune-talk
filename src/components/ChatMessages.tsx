@@ -2,6 +2,7 @@ import { forwardRef, memo } from "react";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { TypingIndicator } from "./TypingIndicator";
 
 export interface Message {
   id: string;
@@ -48,8 +49,8 @@ const ChatMessages = forwardRef<HTMLDivElement, ChatMessagesProps>(
             ))}
             {isSending && (
               <div className="flex justify-start">
-                <div className="bg-muted/50 rounded-2xl px-4 py-3">
-                  <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                <div className="bg-muted/50 rounded-2xl">
+                  <TypingIndicator />
                 </div>
               </div>
             )}

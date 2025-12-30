@@ -5,6 +5,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Sparkles, Star, Palette, Hash, Loader2, Gift } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
+import { FortuneShareButtons } from './FortuneShareButtons';
 
 const LuckStars = ({ luck }: { luck: number }) => {
   return (
@@ -158,6 +159,20 @@ export const DailyFortuneCard = () => {
                     <span className="text-sm text-foreground/80">{fortune.lucky_item}</span>
                   </div>
                 )}
+              </div>
+
+              {/* Share buttons */}
+              <div className={cn(
+                'transition-all duration-500 delay-1000',
+                isRevealing ? 'opacity-100' : 'opacity-0'
+              )}>
+                <FortuneShareButtons
+                  content={fortune.content}
+                  luckyColor={fortune.lucky_color}
+                  luckyNumber={fortune.lucky_number}
+                  luckyItem={fortune.lucky_item}
+                  overallLuck={fortune.overall_luck}
+                />
               </div>
 
               {/* Decorative sparkles */}

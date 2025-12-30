@@ -10,6 +10,7 @@ import { User, LogIn, ScrollText, Ticket, MessageSquare, Settings } from "lucide
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { DailyFortuneCard } from "@/components/DailyFortuneCard";
 import { BackgroundMusic } from "@/components/BackgroundMusic";
+import { TutorialOverlay } from "@/components/TutorialOverlay";
 
 const SettingsLink = () => {
   const { isAdmin } = useIsAdmin();
@@ -29,6 +30,9 @@ const Index = () => {
     profile
   } = useProfile();
   return <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden">
+      {/* Tutorial Overlay - shows once for new users */}
+      <TutorialOverlay />
+      
       {/* Background Music */}
       <BackgroundMusic />
       
