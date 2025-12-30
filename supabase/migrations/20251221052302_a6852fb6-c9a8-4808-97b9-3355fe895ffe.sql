@@ -1,0 +1,1 @@
+ALTER TABLE public.daily_fortunes ADD COLUMN IF NOT EXISTS lucky_item TEXT;
