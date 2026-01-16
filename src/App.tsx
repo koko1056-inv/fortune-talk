@@ -16,6 +16,9 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+import { AuthProvider } from "@/providers/AuthProvider";
+import { ThemeProvider } from "next-themes";
+
 const AppContent = () => {
   useDeepLinks();
 
@@ -29,7 +32,6 @@ const AppContent = () => {
       <Route path="/commercial-transaction" element={<CommercialTransaction />} />
       <Route path="/chat-history" element={<ChatHistory />} />
       <Route path="/settings" element={<Settings />} />
-      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
@@ -37,13 +39,17 @@ const AppContent = () => {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <HashRouter>
-        <AppContent />
-      </HashRouter>
-    </TooltipProvider>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <HashRouter>
+            <AppContent />
+          </HashRouter>
+        </TooltipProvider>
+      </AuthProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 

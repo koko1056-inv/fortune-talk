@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,9 +31,15 @@ const Auth = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Submit attempt started", { isLogin, email });
     setLoading(true);
 
     try {
+      // Dismiss keyboard on mobile
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+
       const validation = authSchema.safeParse({ email, password });
       if (!validation.success) {
         toast.error(validation.error.errors[0].message);
@@ -42,29 +48,43 @@ const Auth = () => {
       }
 
       if (isLogin) {
-        const { error } = await signIn(email, password);
+        console.log("Calling signIn...");
+        const { data, error } = await signIn(email, password);
         if (error) {
+          console.error("Login error confirmed:", error);
           if (error.message.includes("Invalid login")) {
             toast.error("メールアドレスまたはパスワードが正しくありません");
           } else {
             toast.error(error.message);
           }
-        } else {
+        } else if (data.user) {
+          console.log("Login successful, user:", data.user.id);
           toast.success("ログインしました ✨");
+          // Small delay for Capacitor to handle state storage transition
+          setTimeout(() => navigate("/", { replace: true }), 100);
+        } else {
+          console.warn("No error but no user returned from signIn");
         }
       } else {
-        const { error } = await signUp(email, password);
+        console.log("Calling signUp...");
+        const { data, error } = await signUp(email, password);
         if (error) {
+          console.error("Signup error confirmed:", error);
           if (error.message.includes("already registered")) {
             toast.error("このメールアドレスは既に登録されています");
           } else {
             toast.error(error.message);
           }
-        } else {
+        } else if (data.user) {
+          console.log("Signup successful, user:", data.user.id);
           toast.success("アカウントを作成しました！ようこそ ✨");
+          setTimeout(() => navigate("/", { replace: true }), 100);
+        } else {
+          console.warn("No error but no user returned from signUp");
         }
       }
     } catch (error) {
+      console.error("Unexpected auth form error:", error);
       toast.error("エラーが発生しました。もう一度お試しください。");
     } finally {
       setLoading(false);
