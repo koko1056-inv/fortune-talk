@@ -1,8 +1,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Purchases, PurchasesPackage, CustomerInfo, LOG_LEVEL } from '@revenuecat/purchases-capacitor';
-// import { Platform } from 'react-native'; 
 import { Capacitor } from '@capacitor/core';
 import { toast } from 'sonner';
+import { useAuth } from './useAuth';
 
 // TODO: Replace with your actual RevenueCat API Keys
 const API_KEYS = {
@@ -11,6 +11,7 @@ const API_KEYS = {
 };
 
 export const useInAppPurchase = () => {
+    const { user } = useAuth();
     const [packages, setPackages] = useState<PurchasesPackage[]>([]);
     const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
     const [isReady, setIsReady] = useState(false);
@@ -33,8 +34,14 @@ export const useInAppPurchase = () => {
 
                 await Purchases.setLogLevel({ level: LOG_LEVEL.DEBUG });
 
+                // Set user ID so RevenueCat webhook can identify the Supabase user
+                if (user?.id) {
+                    await Purchases.logIn({ appUserID: user.id });
+                    console.log("RevenueCat user ID set to:", user.id);
+                }
+
                 const info = await Purchases.getCustomerInfo();
-                setCustomerInfo(info);
+                setCustomerInfo(info.customerInfo);
 
                 await loadOfferings();
                 setIsReady(true);
@@ -44,7 +51,7 @@ export const useInAppPurchase = () => {
         };
 
         init();
-    }, []);
+    }, [user?.id]);
 
     const loadOfferings = async () => {
         try {
@@ -86,7 +93,7 @@ export const useInAppPurchase = () => {
         setLoading(true);
         try {
             const info = await Purchases.restorePurchases();
-            setCustomerInfo(info);
+            setCustomerInfo(info.customerInfo);
             toast.success("購入を復元しました");
         } catch (error) {
             console.error("Restore failed:", error);

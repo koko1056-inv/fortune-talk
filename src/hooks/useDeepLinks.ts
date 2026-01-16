@@ -12,36 +12,42 @@ export const useDeepLinks = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
+        let listenerHandle: Awaited<ReturnType<typeof CapacitorApp.addListener>> | null = null;
+
         // Handle app URL open events (deep links)
-        const handleAppUrlOpen = CapacitorApp.addListener('appUrlOpen', (event) => {
-            const url = event.url;
-            console.log('Deep link received:', url);
+        const setupListener = async () => {
+            listenerHandle = await CapacitorApp.addListener('appUrlOpen', (event) => {
+                const url = event.url;
+                console.log('Deep link received:', url);
 
-            // Parse the deep link
-            if (url.includes('fortunetalk://')) {
-                const path = url.replace('fortunetalk://', '');
+                // Parse the deep link
+                if (url.includes('fortunetalk://')) {
+                    const path = url.replace('fortunetalk://', '');
 
-                switch (path) {
-                    case 'start-fortune':
-                        // Navigate to home page
-                        navigate('/');
-                        // Dispatch custom event to trigger fortune start
-                        window.dispatchEvent(new CustomEvent('widget-start-fortune'));
-                        break;
+                    switch (path) {
+                        case 'start-fortune':
+                            // Navigate to home page
+                            navigate('/');
+                            // Dispatch custom event to trigger fortune start
+                            window.dispatchEvent(new CustomEvent('widget-start-fortune'));
+                            break;
 
-                    case 'daily-fortune':
-                        // Navigate to home page
-                        navigate('/');
-                        // Dispatch custom event to show daily fortune
-                        window.dispatchEvent(new CustomEvent('widget-daily-fortune'));
-                        break;
+                        case 'daily-fortune':
+                            // Navigate to home page
+                            navigate('/');
+                            // Dispatch custom event to show daily fortune
+                            window.dispatchEvent(new CustomEvent('widget-daily-fortune'));
+                            break;
 
-                    default:
-                        // Unknown deep link, just go home
-                        navigate('/');
+                        default:
+                            // Unknown deep link, just go home
+                            navigate('/');
+                    }
                 }
-            }
-        });
+            });
+        };
+
+        setupListener();
 
         // Check if app was launched with a URL
         CapacitorApp.getLaunchUrl().then((result) => {
@@ -76,7 +82,9 @@ export const useDeepLinks = () => {
 
         // Cleanup listener on unmount
         return () => {
-            handleAppUrlOpen.remove();
+            if (listenerHandle) {
+                listenerHandle.remove();
+            }
         };
     }, [navigate]);
 };

@@ -10,6 +10,7 @@ export interface Profile {
   birth_date: string | null;
   zodiac_sign: string | null;
   blood_type: string | null;
+  tutorial_completed: boolean | null;
   created_at: string;
   updated_at: string;
 }
