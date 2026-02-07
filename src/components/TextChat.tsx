@@ -9,6 +9,7 @@ import ChatInput from "./ChatInput";
 import TicketRequiredDialog from "./TicketRequiredDialog";
 import LoginRequiredDialog from "./LoginRequiredDialog";
 import ProfileHint from "./ProfileHint";
+import EnterRoomTransition from "./EnterRoomTransition";
 import { useAgentConfig } from "@/hooks/useAgentConfig";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
@@ -32,10 +33,12 @@ const TextChat = () => {
   const [showTicketDialog, setShowTicketDialog] = useState(false);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [isUsingTicket, setIsUsingTicket] = useState(false);
+  const [showEnterAnimation, setShowEnterAnimation] = useState(false);
   const sessionIdRef = useRef<string | null>(null);
   const currentAgentRef = useRef<Agent | null>(null);
   const isFreeReadingRef = useRef(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const pendingStartRef = useRef(false);
 
   useEffect(() => {
     if (agents.length > 0 && !selectedAgent) {
@@ -226,6 +229,24 @@ const TextChat = () => {
     toast.info("チャットを終了しました");
   }, [user, rallyCount, refetchBilling]);
 
+  const handleEnterAnimationComplete = useCallback(() => {
+    setShowEnterAnimation(false);
+    if (pendingStartRef.current) {
+      pendingStartRef.current = false;
+      startChat();
+    }
+  }, [startChat]);
+
+  const handleStartClick = useCallback(() => {
+    if (!user) {
+      setShowLoginDialog(true);
+      return;
+    }
+    // Show enter animation first
+    pendingStartRef.current = true;
+    setShowEnterAnimation(true);
+  }, [user]);
+
   if (agentsLoading || !selectedAgent) {
     return (
       <div className="flex flex-col items-center gap-6 w-full">
@@ -240,7 +261,16 @@ const TextChat = () => {
   const isRallyLimitReached = !billingStatus.isExempt && rallyCount >= MAX_RALLIES_PER_TICKET;
 
   return (
-    <div className="flex flex-col items-center gap-4 w-full max-w-xl mx-auto">
+    <>
+      {selectedAgent && (
+        <EnterRoomTransition
+          agent={selectedAgent}
+          isVisible={showEnterAnimation}
+          onComplete={handleEnterAnimationComplete}
+          displayName={profile?.display_name}
+        />
+      )}
+      <div className="flex flex-col items-center gap-4 w-full max-w-xl mx-auto">
       <TicketRequiredDialog
         open={showTicketDialog}
         onOpenChange={setShowTicketDialog}
@@ -298,14 +328,15 @@ const TextChat = () => {
         </div>
       )}
 
-      <TextChatButton
-        isConnected={isConnected}
-        isConnecting={isConnecting}
-        onClick={isConnected ? endChat : startChat}
-      />
+        <TextChatButton
+          isConnected={isConnected}
+          isConnecting={isConnecting}
+          onClick={isConnected ? endChat : handleStartClick}
+        />
 
-      {!isConnected && !user && <ProfileHint />}
-    </div>
+        {!isConnected && !user && <ProfileHint />}
+      </div>
+    </>
   );
 };
 

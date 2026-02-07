@@ -11,6 +11,7 @@ import TicketRequiredDialog from "./TicketRequiredDialog";
 import LoginRequiredDialog from "./LoginRequiredDialog";
 import TicketBalanceDisplay from "./TicketBalanceDisplay";
 import ProfileHint from "./ProfileHint";
+import EnterRoomTransition from "./EnterRoomTransition";
 import { useAgentConfig } from "@/hooks/useAgentConfig";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
@@ -32,12 +33,14 @@ const VoiceChat = () => {
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isUsingTicket, setIsUsingTicket] = useState(false);
+  const [showEnterAnimation, setShowEnterAnimation] = useState(false);
   const sessionStartRef = useRef<Date | null>(null);
   const currentAgentRef = useRef<Agent | null>(null);
   const isFreeReadingRef = useRef(false);
   const reconnectAttemptRef = useRef(0);
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const maxReconnectAttempts = 3;
+  const pendingStartRef = useRef(false);
 
   // Set initial selected agent when agents are loaded
   useEffect(() => {
@@ -230,6 +233,14 @@ const VoiceChat = () => {
     await conversation.endSession();
   }, [conversation]);
 
+  const handleEnterAnimationComplete = useCallback(() => {
+    setShowEnterAnimation(false);
+    if (pendingStartRef.current) {
+      pendingStartRef.current = false;
+      startConversation();
+    }
+  }, [startConversation]);
+
   const handleButtonClick = () => {
     if (conversation.status === "connected") {
       stopConversation();
@@ -238,7 +249,9 @@ const VoiceChat = () => {
         setShowLoginDialog(true);
         return;
       }
-      startConversation();
+      // Show enter animation first
+      pendingStartRef.current = true;
+      setShowEnterAnimation(true);
     }
   };
 
@@ -264,7 +277,16 @@ const VoiceChat = () => {
   }
 
   return (
-    <div className="flex flex-col items-center gap-6 md:gap-10 w-full">
+    <>
+      {selectedAgent && (
+        <EnterRoomTransition
+          agent={selectedAgent}
+          isVisible={showEnterAnimation}
+          onComplete={handleEnterAnimationComplete}
+          displayName={profile?.display_name}
+        />
+      )}
+      <div className="flex flex-col items-center gap-6 md:gap-10 w-full">
       {!isConversationConnected && (
         <AgentSelector
           agents={agents}
@@ -350,7 +372,8 @@ const VoiceChat = () => {
         showEndOption
         onEnd={stopConversation}
       />
-    </div>
+      </div>
+    </>
   );
 };
 
