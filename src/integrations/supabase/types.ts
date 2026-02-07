@@ -151,6 +151,56 @@ export type Database = {
         }
         Relationships: []
       }
+      conversation_insights: {
+        Row: {
+          advice_given: string[]
+          agent_name: string
+          created_at: string
+          id: string
+          key_concerns: string[]
+          keywords: string[]
+          session_date: string
+          session_id: string | null
+          summary: string
+          topics: string[]
+          user_id: string
+        }
+        Insert: {
+          advice_given?: string[]
+          agent_name: string
+          created_at?: string
+          id?: string
+          key_concerns?: string[]
+          keywords?: string[]
+          session_date?: string
+          session_id?: string | null
+          summary: string
+          topics?: string[]
+          user_id: string
+        }
+        Update: {
+          advice_given?: string[]
+          agent_name?: string
+          created_at?: string
+          id?: string
+          key_concerns?: string[]
+          keywords?: string[]
+          session_date?: string
+          session_id?: string | null
+          summary?: string
+          topics?: string[]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_insights_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "chat_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       daily_fortunes: {
         Row: {
           content: string
