@@ -18,7 +18,11 @@ import { supabase } from "@/integrations/supabase/client";
 
 const MAX_RALLIES_PER_TICKET = 10;
 
-const TextChat = () => {
+interface TextChatProps {
+  onSessionChange?: (isInSession: boolean) => void;
+}
+
+const TextChat = ({ onSessionChange }: TextChatProps) => {
   const navigate = useNavigate();
   const { agents, loading: agentsLoading } = useAgentConfig();
   const { user } = useAuth();
@@ -38,6 +42,11 @@ const TextChat = () => {
   const currentAgentRef = useRef<Agent | null>(null);
   const isFreeReadingRef = useRef(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Notify parent of session state changes
+  useEffect(() => {
+    onSessionChange?.(isConnected || isConnecting || showEnterAnimation);
+  }, [isConnected, isConnecting, showEnterAnimation, onSessionChange]);
 
   useEffect(() => {
     if (agents.length > 0 && !selectedAgent) {

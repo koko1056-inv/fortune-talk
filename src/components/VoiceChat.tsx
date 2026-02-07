@@ -20,7 +20,11 @@ import { useBillingStatus } from "@/hooks/useBillingStatus";
 
 const MAX_SECONDS_PER_TICKET = 180; // 3 minutes per ticket
 
-const VoiceChat = () => {
+interface VoiceChatProps {
+  onSessionChange?: (isInSession: boolean) => void;
+}
+
+const VoiceChat = ({ onSessionChange }: VoiceChatProps) => {
   const navigate = useNavigate();
   const { agents, loading: agentsLoading } = useAgentConfig();
   const { user } = useAuth();
@@ -41,6 +45,11 @@ const VoiceChat = () => {
   const reconnectAttemptRef = useRef(0);
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const maxReconnectAttempts = 3;
+
+  // Notify parent of session state changes
+  useEffect(() => {
+    onSessionChange?.(isInSession || showEnterAnimation);
+  }, [isInSession, showEnterAnimation, onSessionChange]);
 
   // Set initial selected agent when agents are loaded
   useEffect(() => {
