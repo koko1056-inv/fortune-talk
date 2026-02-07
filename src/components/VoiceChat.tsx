@@ -44,6 +44,8 @@ const VoiceChat = ({ onSessionChange }: VoiceChatProps) => {
   const isFreeReadingRef = useRef(false);
   const reconnectAttemptRef = useRef(0);
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const userRequestedEndRef = useRef(false); // Track if user explicitly ended the session
+  const hasEverConnectedRef = useRef(false); // Track if connection was ever established
   const maxReconnectAttempts = 3;
 
   // Notify parent of session state changes - stable "room mode" logic
@@ -124,8 +126,9 @@ const VoiceChat = ({ onSessionChange }: VoiceChatProps) => {
 
   const conversation = useConversation({
     onConnect: () => {
-      console.log("Connected to agent");
+      console.log("[VoiceChat] Connected to agent");
       reconnectAttemptRef.current = 0;
+      hasEverConnectedRef.current = true;
       sessionStartRef.current = new Date();
       currentAgentRef.current = selectedAgent;
       setIsConnectedState(true);
@@ -137,11 +140,12 @@ const VoiceChat = ({ onSessionChange }: VoiceChatProps) => {
       toast.success(profileInfo, { description: "話しかけてください" });
     },
     onDisconnect: () => {
-      console.log("Disconnected from agent");
+      console.log("[VoiceChat] Disconnected from agent, userRequestedEnd:", userRequestedEndRef.current);
       setIsConnectedState(false);
-      setIsInSession(false);
       stopTimer();
       setElapsedSeconds(0);
+      
+      // Save reading data if there was a session
       if (user && sessionStartRef.current && currentAgentRef.current) {
         saveReading(
           currentAgentRef.current.name,
@@ -155,10 +159,23 @@ const VoiceChat = ({ onSessionChange }: VoiceChatProps) => {
         isFreeReadingRef.current = false;
         refetchBilling();
       }
-      toast.info("鑑定を終了しました");
+      
+      // Only exit session if user explicitly requested it
+      if (userRequestedEndRef.current) {
+        setIsInSession(false);
+        userRequestedEndRef.current = false;
+        hasEverConnectedRef.current = false;
+        toast.info("鑑定を終了しました");
+      } else {
+        // Unexpected disconnect - show error but stay in room
+        toast.error("接続が切断されました", { 
+          description: "「占いを始める」ボタンで再接続できます" 
+        });
+      }
     },
     onError: (error) => {
-      console.error("Error:", error);
+      console.error("[VoiceChat] Error:", error);
+      // Don't exit session on error - let user retry or explicitly leave
       if (reconnectAttemptRef.current < maxReconnectAttempts && selectedAgent) {
         reconnectAttemptRef.current += 1;
         toast.warning(`接続が不安定です (再試行 ${reconnectAttemptRef.current}/${maxReconnectAttempts})`, {
@@ -167,7 +184,9 @@ const VoiceChat = ({ onSessionChange }: VoiceChatProps) => {
         setTimeout(() => startConversationInternal(), 1000 * reconnectAttemptRef.current);
       } else {
         reconnectAttemptRef.current = 0;
-        toast.error("エラーが発生しました", { description: "もう一度お試しください" });
+        toast.error("接続エラーが発生しました", { 
+          description: "「占いを始める」ボタンで再試行できます" 
+        });
       }
     },
   });
@@ -255,8 +274,12 @@ const VoiceChat = ({ onSessionChange }: VoiceChatProps) => {
 
   const handleButtonClick = async () => {
     if (conversation.status === "connected") {
-      setIsInSession(false);
-      stopConversation();
+      // User explicitly ending the session
+      userRequestedEndRef.current = true;
+      await stopConversation();
+    } else if (isInSession) {
+      // Already in session but not connected - try to reconnect
+      await startConversation();
     } else {
       if (!user) {
         setShowLoginDialog(true);
@@ -269,6 +292,18 @@ const VoiceChat = ({ onSessionChange }: VoiceChatProps) => {
       await startConversation();
     }
   };
+
+  // Handler for explicitly leaving the room (back button, etc.)
+  const handleLeaveRoom = useCallback(() => {
+    userRequestedEndRef.current = true;
+    if (conversation.status === "connected") {
+      stopConversation();
+    } else {
+      setIsInSession(false);
+      userRequestedEndRef.current = false;
+      hasEverConnectedRef.current = false;
+    }
+  }, [conversation.status, stopConversation]);
 
   const isConversationConnected = conversation.status === "connected";
 
@@ -318,6 +353,7 @@ const VoiceChat = ({ onSessionChange }: VoiceChatProps) => {
             isConnecting={isConnecting || !isConversationConnected}
             elapsedSeconds={!billingStatus.isExempt && isConversationConnected ? elapsedSeconds : undefined}
             maxSeconds={!billingStatus.isExempt && isConversationConnected ? MAX_SECONDS_PER_TICKET : undefined}
+            onLeave={handleLeaveRoom}
           >
             <div className="flex flex-col items-center gap-4">
               <AudioVisualizer isActive={isConversationConnected} isSpeaking={conversation.isSpeaking} />

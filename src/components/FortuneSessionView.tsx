@@ -2,8 +2,10 @@ import { memo } from "react";
 import { Agent } from "./AgentSelector";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
-interface FortuneSessionViewProps {
+export interface FortuneSessionViewProps {
   agent: Agent;
   displayName?: string | null;
   isConnecting?: boolean;
@@ -13,6 +15,7 @@ interface FortuneSessionViewProps {
   showRallyCounter?: boolean;
   elapsedSeconds?: number;
   maxSeconds?: number;
+  onLeave?: () => void;
 }
 
 const formatTime = (seconds: number) => {
@@ -31,6 +34,7 @@ const FortuneSessionView = memo(({
   showRallyCounter = false,
   elapsedSeconds,
   maxSeconds,
+  onLeave,
 }: FortuneSessionViewProps) => {
   const showTimer = elapsedSeconds !== undefined && maxSeconds !== undefined;
   const timeRemaining = showTimer ? maxSeconds - elapsedSeconds : 0;
@@ -38,6 +42,19 @@ const FortuneSessionView = memo(({
 
   return (
     <div className="w-full animate-fade-in">
+      {/* Back button to leave room */}
+      {onLeave && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onLeave}
+          className="absolute top-4 left-4 text-muted-foreground hover:text-foreground z-10"
+        >
+          <ArrowLeft className="w-4 h-4 mr-1" />
+          戻る
+        </Button>
+      )}
+      
       {/* Fortune teller header with large image */}
       <div className="relative mb-6">
         {/* Background glow effect */}
