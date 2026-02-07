@@ -162,7 +162,7 @@ const VoiceChat = ({ onSessionChange }: VoiceChatProps) => {
         setIsInSession(false);
         userRequestedEndRef.current = false;
         hasEverConnectedRef.current = false;
-        toast.info("鑑定を終了しました");
+        // Session ended - no toast notification needed as user returns to home screen
       } else if (hasEverConnectedRef.current) {
         // Unexpected disconnect after successful connection
         setConnectionError("接続が切断されました。再接続するにはマイクボタンをタップしてください。");
