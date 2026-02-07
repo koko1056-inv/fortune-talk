@@ -6,22 +6,15 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface Message {
-  role: string;
-  content: string;
-}
-
 interface RequestBody {
-  sessionId: string;
-  messages: Message[];
-  agentName: string;
+  query: string;
+  matchThreshold?: number;
+  matchCount?: number;
 }
 
 // Generate embedding using Lovable AI gateway
 async function generateEmbedding(text: string, apiKey: string): Promise<number[] | null> {
   try {
-    // Use chat completion to generate a semantic representation
-    // Then convert to embedding via a specialized prompt
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -102,10 +95,14 @@ serve(async (req) => {
       });
     }
 
-    const { sessionId, messages, agentName }: RequestBody = await req.json();
+    const { query, matchThreshold = 0.5, matchCount = 5 }: RequestBody = await req.json();
 
-    if (!messages || messages.length < 2) {
-      return new Response(JSON.stringify({ success: true, message: "Not enough messages to extract insights" }), {
+    if (!query || query.trim().length === 0) {
+      return new Response(JSON.stringify({ 
+        success: true, 
+        context: "",
+        matches: [] 
+      }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -115,121 +112,112 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    // Format conversation for analysis
-    const conversationText = messages
-      .map(m => `${m.role === "user" ? "相談者" : "占い師"}: ${m.content}`)
-      .join("\n");
+    // Generate embedding for the query
+    const queryEmbedding = await generateEmbedding(query, LOVABLE_API_KEY);
 
-    const extractionPrompt = `以下の占い相談の会話を分析し、JSON形式で情報を抽出してください。
+    if (!queryEmbedding) {
+      // Fallback to recent insights if embedding fails
+      const { data: recentInsights } = await supabaseClient
+        .from("conversation_insights")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("session_date", { ascending: false })
+        .limit(matchCount);
 
-会話内容:
-${conversationText}
-
-以下のJSON形式で回答してください（日本語で）:
-{
-  "summary": "会話の要約（100文字以内）",
-  "keywords": ["キーワード1", "キーワード2", ...],
-  "topics": ["恋愛", "仕事", "健康", "金運", "人間関係", "将来", "家族", "その他"],
-  "key_concerns": ["相談者の主な悩みや関心事"],
-  "advice_given": ["占い師が与えた主なアドバイス"]
-}
-
-topicsは該当するもののみを配列に含めてください。`;
-
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: "あなたは会話分析の専門家です。与えられた会話から重要な情報を抽出し、指定されたJSON形式で返してください。必ず有効なJSONのみを返してください。" },
-          { role: "user", content: extractionPrompt },
-        ],
-        stream: false,
-      }),
-    });
-
-    if (!response.ok) {
-      console.error("AI gateway error:", response.status);
-      throw new Error("Failed to extract insights");
+      const fallbackContext = formatInsightsAsContext(recentInsights || []);
+      
+      return new Response(JSON.stringify({ 
+        success: true, 
+        context: fallbackContext,
+        matches: recentInsights || [],
+        fallback: true
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || "";
-
-    // Parse the JSON from the response
-    let insights;
-    try {
-      // Try to extract JSON from the response
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        insights = JSON.parse(jsonMatch[0]);
-      } else {
-        throw new Error("No JSON found in response");
-      }
-    } catch (parseError) {
-      console.error("Failed to parse insights:", parseError, content);
-      // Use default values if parsing fails
-      insights = {
-        summary: "会話の内容を分析できませんでした",
-        keywords: [],
-        topics: [],
-        key_concerns: [],
-        advice_given: [],
-      };
-    }
-
-    // Generate embedding for the summary + key concerns text
-    const embeddingText = [
-      insights.summary,
-      ...(insights.topics || []),
-      ...(insights.key_concerns || []),
-      ...(insights.keywords || []),
-    ].join(" ");
-
-    const embedding = await generateEmbedding(embeddingText, LOVABLE_API_KEY);
-
-    // Use service role client to insert with embedding (RLS bypass for vector column)
+    // Use service role to call the match function
     const serviceClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // Save insights to database with embedding
-    const { error: insertError } = await serviceClient
-      .from("conversation_insights")
-      .insert({
-        user_id: user.id,
-        session_id: sessionId,
-        summary: insights.summary || "",
-        keywords: insights.keywords || [],
-        topics: insights.topics || [],
-        key_concerns: insights.key_concerns || [],
-        advice_given: insights.advice_given || [],
-        agent_name: agentName,
-        embedding: embedding,
-      });
+    // Call the vector similarity search function
+    const { data: matches, error: matchError } = await serviceClient.rpc(
+      "match_conversation_insights",
+      {
+        query_embedding: queryEmbedding,
+        match_threshold: matchThreshold,
+        match_count: matchCount,
+        p_user_id: user.id,
+      }
+    );
 
-    if (insertError) {
-      console.error("Failed to save insights:", insertError);
-      throw new Error("Failed to save insights");
+    if (matchError) {
+      console.error("Match error:", matchError);
+      throw new Error("Failed to search insights");
     }
+
+    // Format matches as context string
+    const context = formatInsightsAsContext(matches || []);
 
     return new Response(JSON.stringify({ 
       success: true, 
-      insights,
-      hasEmbedding: !!embedding 
+      context,
+      matches: matches || [],
+      matchCount: matches?.length || 0
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
-    console.error("extract-conversation-insights error:", e);
+    console.error("search-relevant-insights error:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
+
+interface InsightMatch {
+  id: string;
+  summary: string;
+  topics: string[];
+  key_concerns: string[];
+  advice_given: string[];
+  agent_name: string;
+  session_date: string;
+  similarity?: number;
+}
+
+function formatInsightsAsContext(insights: InsightMatch[]): string {
+  if (!insights || insights.length === 0) return "";
+
+  const contextParts: string[] = [];
+  
+  insights.forEach((insight, index) => {
+    const date = new Date(insight.session_date).toLocaleDateString('ja-JP');
+    const similarityInfo = insight.similarity 
+      ? `（関連度: ${Math.round(insight.similarity * 100)}%）` 
+      : "";
+    
+    contextParts.push(`【過去の相談 ${index + 1}${similarityInfo}】`);
+    contextParts.push(`日付: ${date}・担当: ${insight.agent_name}`);
+    contextParts.push(`要約: ${insight.summary}`);
+    
+    if (insight.topics && insight.topics.length > 0) {
+      contextParts.push(`テーマ: ${insight.topics.join('、')}`);
+    }
+    
+    if (insight.key_concerns && insight.key_concerns.length > 0) {
+      contextParts.push(`悩み: ${insight.key_concerns.join('、')}`);
+    }
+    
+    if (insight.advice_given && insight.advice_given.length > 0) {
+      contextParts.push(`アドバイス: ${insight.advice_given.join('、')}`);
+    }
+    
+    contextParts.push('');
+  });
+
+  return contextParts.join('\n');
+}

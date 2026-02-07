@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -15,6 +15,7 @@ export interface ConversationInsight {
   agent_name: string;
   session_date: string;
   created_at: string;
+  similarity?: number;
 }
 
 const fetchInsights = async (userId: string): Promise<ConversationInsight[]> => {
@@ -34,6 +35,7 @@ const fetchInsights = async (userId: string): Promise<ConversationInsight[]> => 
 
 export const useConversationInsights = () => {
   const { user } = useAuth();
+  const [isSearching, setIsSearching] = useState(false);
 
   const { data: insights = [], isLoading: loading } = useQuery({
     queryKey: ['conversation-insights', user?.id],
@@ -68,7 +70,40 @@ export const useConversationInsights = () => {
     }
   }, [user]);
 
-  // Get relevant past insights for context (for RAG)
+  // Search for relevant past insights using vector similarity (RAG)
+  const searchRelevantInsights = useCallback(async (
+    query: string,
+    matchThreshold: number = 0.5,
+    matchCount: number = 5
+  ): Promise<{ context: string; matches: ConversationInsight[] }> => {
+    if (!user || !query.trim()) {
+      return { context: "", matches: [] };
+    }
+
+    setIsSearching(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('search-relevant-insights', {
+        body: { query, matchThreshold, matchCount },
+      });
+
+      if (error) {
+        console.error('Failed to search insights:', error);
+        return { context: "", matches: [] };
+      }
+
+      return {
+        context: data.context || "",
+        matches: data.matches || [],
+      };
+    } catch (error) {
+      console.error('Error searching insights:', error);
+      return { context: "", matches: [] };
+    } finally {
+      setIsSearching(false);
+    }
+  }, [user]);
+
+  // Legacy: Get relevant past insights for context (fallback, non-vector)
   const getRelevantContext = useCallback((limit: number = 10): string => {
     if (insights.length === 0) return "";
 
@@ -133,7 +168,9 @@ export const useConversationInsights = () => {
   return {
     insights,
     loading,
+    isSearching,
     extractInsights,
+    searchRelevantInsights,
     getRelevantContext,
     getAggregatedKeywords,
     getTopicDistribution,

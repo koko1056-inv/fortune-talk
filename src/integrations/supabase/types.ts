@@ -156,6 +156,7 @@ export type Database = {
           advice_given: string[]
           agent_name: string
           created_at: string
+          embedding: string | null
           id: string
           key_concerns: string[]
           keywords: string[]
@@ -169,6 +170,7 @@ export type Database = {
           advice_given?: string[]
           agent_name: string
           created_at?: string
+          embedding?: string | null
           id?: string
           key_concerns?: string[]
           keywords?: string[]
@@ -182,6 +184,7 @@ export type Database = {
           advice_given?: string[]
           agent_name?: string
           created_at?: string
+          embedding?: string | null
           id?: string
           key_concerns?: string[]
           keywords?: string[]
@@ -454,6 +457,27 @@ export type Database = {
       }
       has_used_free_reading: { Args: { _user_id: string }; Returns: boolean }
       is_billing_exempt: { Args: { _user_id: string }; Returns: boolean }
+      match_conversation_insights: {
+        Args: {
+          match_count?: number
+          match_threshold?: number
+          p_user_id?: string
+          query_embedding: string
+        }
+        Returns: {
+          advice_given: string[]
+          agent_name: string
+          id: string
+          key_concerns: string[]
+          keywords: string[]
+          session_date: string
+          session_id: string
+          similarity: number
+          summary: string
+          topics: string[]
+          user_id: string
+        }[]
+      }
       use_ticket: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
