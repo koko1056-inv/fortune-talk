@@ -83,9 +83,17 @@ const TextChatSessionView = memo(({
           {/* Agent avatar with glow */}
           <div className="relative">
             <div className="absolute inset-0 bg-primary/30 rounded-full blur-md animate-pulse" />
-            <div className="relative w-10 h-10 rounded-full bg-gradient-to-br from-primary/30 to-primary/10 border border-primary/40 flex items-center justify-center text-xl shadow-lg">
-              {agent.emoji}
-            </div>
+            {agent.imageUrl ? (
+              <img 
+                src={agent.imageUrl} 
+                alt={agent.name}
+                className="relative w-10 h-10 rounded-full border border-primary/40 object-cover shadow-lg"
+              />
+            ) : (
+              <div className="relative w-10 h-10 rounded-full bg-gradient-to-br from-primary/30 to-primary/10 border border-primary/40 flex items-center justify-center text-xl shadow-lg">
+                {agent.emoji}
+              </div>
+            )}
           </div>
           
           {/* Agent info with LIVE badge */}
@@ -122,9 +130,17 @@ const TextChatSessionView = memo(({
             <div className="flex flex-col items-center justify-center h-full gap-4">
               <div className="relative">
                 <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl animate-pulse" />
-                <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 flex items-center justify-center">
-                  <Sparkles className="w-8 h-8 text-primary animate-pulse" />
-                </div>
+                {agent.imageUrl ? (
+                  <img 
+                    src={agent.imageUrl} 
+                    alt={agent.name}
+                    className="relative w-16 h-16 rounded-full border border-primary/30 object-cover"
+                  />
+                ) : (
+                  <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 flex items-center justify-center">
+                    <Sparkles className="w-8 h-8 text-primary animate-pulse" />
+                  </div>
+                )}
               </div>
               <div className="flex items-center gap-2 text-muted-foreground text-sm">
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -135,9 +151,17 @@ const TextChatSessionView = memo(({
             <div className="flex flex-col items-center justify-center h-full gap-4">
               <div className="relative">
                 <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl animate-pulse" />
-                <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 flex items-center justify-center text-2xl">
-                  {agent.emoji}
-                </div>
+                {agent.imageUrl ? (
+                  <img 
+                    src={agent.imageUrl} 
+                    alt={agent.name}
+                    className="relative w-16 h-16 rounded-full border border-primary/30 object-cover"
+                  />
+                ) : (
+                  <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 flex items-center justify-center text-2xl">
+                    {agent.emoji}
+                  </div>
+                )}
               </div>
               <div className="flex items-center gap-2 text-muted-foreground text-sm">
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -156,9 +180,17 @@ const TextChatSessionView = memo(({
                 >
                   {/* Agent avatar for assistant messages */}
                   {message.role === "assistant" && (
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 flex items-center justify-center text-sm shrink-0 mt-1">
-                      {agent.emoji}
-                    </div>
+                    agent.imageUrl ? (
+                      <img 
+                        src={agent.imageUrl} 
+                        alt={agent.name}
+                        className="w-8 h-8 rounded-full border border-primary/30 object-cover shrink-0 mt-1"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 flex items-center justify-center text-sm shrink-0 mt-1">
+                        {agent.emoji}
+                      </div>
+                    )
                   )}
                   
                   <div
@@ -175,9 +207,17 @@ const TextChatSessionView = memo(({
               ))}
               {isSending && (
                 <div className="flex gap-2 justify-start">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 flex items-center justify-center text-sm shrink-0">
-                    {agent.emoji}
-                  </div>
+                  {agent.imageUrl ? (
+                    <img 
+                      src={agent.imageUrl} 
+                      alt={agent.name}
+                      className="w-8 h-8 rounded-full border border-primary/30 object-cover shrink-0"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 flex items-center justify-center text-sm shrink-0">
+                      {agent.emoji}
+                    </div>
+                  )}
                   <div className="bg-muted/60 border border-border/30 rounded-2xl rounded-bl-md px-4 py-3 backdrop-blur-sm">
                     <div className="flex gap-1">
                       <div className="w-2 h-2 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "0ms" }} />
