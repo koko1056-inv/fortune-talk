@@ -48,8 +48,10 @@ const VoiceChat = ({ onSessionChange }: VoiceChatProps) => {
 
   // Notify parent of session state changes
   useEffect(() => {
-    onSessionChange?.(isInSession || showEnterAnimation);
-  }, [isInSession, showEnterAnimation, onSessionChange]);
+    // Keep parent notified of session state - isInSession is the source of truth
+    // showEnterAnimation is just for the visual transition
+    onSessionChange?.(isInSession);
+  }, [isInSession, onSessionChange]);
 
   // Set initial selected agent when agents are loaded
   useEffect(() => {
@@ -244,8 +246,9 @@ const VoiceChat = ({ onSessionChange }: VoiceChatProps) => {
   }, [conversation]);
 
   const handleEnterAnimationComplete = useCallback(() => {
-    // Animation completed - startConversation was already called during animation
+    // Animation completed - keep isInSession true, just hide the animation overlay
     setShowEnterAnimation(false);
+    // isInSession remains true until the conversation ends
   }, []);
 
   const handleButtonClick = async () => {
