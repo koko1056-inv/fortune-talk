@@ -204,10 +204,7 @@ const TextChat = ({ onSessionChange }: TextChatProps) => {
       setIsConnecting(false);
       setRallyCount(0);
 
-      const profileInfo = profile?.display_name
-        ? `${profile.display_name}さん、${selectedAgent.name}とのチャットを開始しました`
-        : `${selectedAgent.name}とのチャットを開始しました`;
-      toast.success(profileInfo);
+      // Connection successful - no toast notification needed as the UI already shows the connected state
 
       await sendMessageToAI("こんにちは、占いをお願いします。");
     } catch (error) {
