@@ -337,6 +337,45 @@ export type Database = {
         }
         Relationships: []
       }
+      webhook_events: {
+        Row: {
+          app_user_id: string | null
+          created_at: string
+          event_id: string | null
+          event_type: string
+          id: string
+          process_error: string | null
+          processed: boolean
+          processed_at: string | null
+          product_id: string | null
+          raw_payload: Json
+        }
+        Insert: {
+          app_user_id?: string | null
+          created_at?: string
+          event_id?: string | null
+          event_type: string
+          id?: string
+          process_error?: string | null
+          processed?: boolean
+          processed_at?: string | null
+          product_id?: string | null
+          raw_payload: Json
+        }
+        Update: {
+          app_user_id?: string | null
+          created_at?: string
+          event_id?: string | null
+          event_type?: string
+          id?: string
+          process_error?: string | null
+          processed?: boolean
+          processed_at?: string | null
+          product_id?: string | null
+          raw_payload?: Json
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
