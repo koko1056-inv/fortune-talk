@@ -6,7 +6,7 @@ import VoiceButton from "./VoiceButton";
 import AudioVisualizer from "./AudioVisualizer";
 import StatusIndicator from "./StatusIndicator";
 import AgentSelector, { Agent } from "./AgentSelector";
-import ConnectedAgentDisplay from "./ConnectedAgentDisplay";
+import FortuneSessionView from "./FortuneSessionView";
 import TicketRequiredDialog from "./TicketRequiredDialog";
 import LoginRequiredDialog from "./LoginRequiredDialog";
 import TicketBalanceDisplay from "./TicketBalanceDisplay";
@@ -296,26 +296,23 @@ const VoiceChat = () => {
         />
       )}
 
-      {isConversationConnected && currentAgentRef.current && (
-        <ConnectedAgentDisplay
-          agent={currentAgentRef.current}
-          displayName={profile?.display_name}
-          variant="large"
-          elapsedSeconds={!billingStatus.isExempt ? elapsedSeconds : undefined}
-          maxSeconds={!billingStatus.isExempt ? MAX_SECONDS_PER_TICKET : undefined}
-        />
-      )}
-
-      {isConversationConnected && (
-        <AudioVisualizer isActive={isConversationConnected} isSpeaking={conversation.isSpeaking} />
-      )}
-
-      {isConversationConnected && (
-        <StatusIndicator
-          status={isConnecting ? "connecting" : conversation.status}
-          isSpeaking={conversation.isSpeaking}
-        />
-      )}
+        {isConversationConnected && currentAgentRef.current && (
+          <FortuneSessionView
+            agent={currentAgentRef.current}
+            displayName={profile?.display_name}
+            isConnecting={isConnecting}
+            elapsedSeconds={!billingStatus.isExempt ? elapsedSeconds : undefined}
+            maxSeconds={!billingStatus.isExempt ? MAX_SECONDS_PER_TICKET : undefined}
+          >
+            <div className="flex flex-col items-center gap-4">
+              <AudioVisualizer isActive={isConversationConnected} isSpeaking={conversation.isSpeaking} />
+              <StatusIndicator
+                status={isConnecting ? "connecting" : conversation.status}
+                isSpeaking={conversation.isSpeaking}
+              />
+            </div>
+          </FortuneSessionView>
+        )}
 
       <VoiceButton
         isConnected={isConversationConnected}
