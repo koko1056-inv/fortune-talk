@@ -1,58 +1,100 @@
 
-## 問題の詳細分析
+# テキストチャット画面の機能復旧プラン
 
-### 現在起きていること（ログから判明）
-1. 「占いを始める」クリック → `isInSession: true`、入室アニメ開始
-2. アニメ完了 + 接続処理完了（`isConnecting: false`）
-3. **直後に `onDisconnect` が呼ばれる** → `setIsInSession(false)`が実行
-4. ホーム画面に戻ってしまう
+## 問題の原因
 
-### 根本原因
-`VoiceChat.tsx` の `onDisconnect` コールバック内で無条件に `setIsInSession(false)` を呼んでいるため、接続が失敗した場合やユーザーがボタンを素早くタップした場合に、ルーム画面を維持できずにホームに戻ってしまいます。
+`TextChat.tsx` では `FortuneSessionView` コンポーネントを使用し、チャットUIを `children` として渡していますが、現在の `FortuneSessionView` は **音声チャット専用のUI** になっており、`children` をレンダリングしていません。
+
+そのため、テキストチャット開始時にセッション画面は表示されるものの、メッセージ一覧や入力欄などのチャット機能が見えない状態になっています。
 
 ---
 
-## 修正方針
+## 解決方針
 
-### 1. `VoiceChat.tsx` の状態管理を修正
-- `onDisconnect` で `setIsInSession(false)` を呼ぶタイミングを制御
-- 接続が一度も成功していない場合（初回接続失敗）は、エラーメッセージを表示しつつルーム画面を維持するか、明確にホームに戻すかを選択させる
-- 「ルームに滞在中」の状態を、接続状態とは独立して管理する
+テキストチャット専用のセッションビューコンポーネントを作成するか、`FortuneSessionView` を拡張してテキストチャットモードもサポートするようにします。
 
-### 2. セッション終了の明確化
-- ユーザーが明示的に「終了」ボタンを押した場合のみ `isInSession` を `false` にする
-- `onDisconnect` が呼ばれた場合は「再接続を試みる」または「切断されました」UIを表示
+**選択した方法**: テキストチャット専用のセッションビューを新規作成
 
----
-
-## 具体的な変更
-
-### `src/components/VoiceChat.tsx`
-
-**変更点1**: `onDisconnect` の処理を修正
-- 「ユーザーが明示的に終了した」フラグ（`userRequestedEndRef`）を追加
-- ユーザーが終了ボタンを押した場合のみ `setIsInSession(false)` を呼ぶ
-- 予期しない切断の場合はルーム内でエラー表示
-
-**変更点2**: 接続エラー時の処理を改善
-- `onError` でもルーム画面は維持
-- 再試行オプションまたはホームに戻るボタンを表示
-
-**変更点3**: VoiceButtonの「終了」ボタンクリック時のフロー
-- `stopConversation` 呼び出し前に `userRequestedEndRef.current = true` をセット
-- これにより `onDisconnect` 内で意図的な終了かどうかを判別
+これにより、音声チャットとテキストチャットの両方のUIを独立して管理でき、将来的な機能追加も容易になります。
 
 ---
 
 ## 変更するファイル
-- `src/components/VoiceChat.tsx` - 状態管理とセッション終了ロジックの修正
-- （必要に応じて）`src/components/FortuneSessionView.tsx` - 切断時のUI表示改善
+
+### 1. `src/components/TextChatSessionView.tsx` (新規作成)
+
+テキストチャット専用のセッション画面コンポーネント：
+
+- **ヘッダー**: LIVEバッジ、占い師名、終了ボタン
+- **メインエリア**: 占い師の画像/アバター表示（左上に小さく）、チャットメッセージ一覧、入力エリア
+- **フッター**: ラリーカウンター（残り回数表示）
+
+デザイン構成:
+```text
+┌────────────────────────────────┐
+│ [LIVE]  四柱推命占い師  [終了] │ ← ヘッダー
+├────────────────────────────────┤
+│ 🔮                              │
+│ ┌──────────────────────────┐   │
+│ │ チャットメッセージ一覧   │   │ ← メインエリア
+│ │                          │   │
+│ └──────────────────────────┘   │
+│ ┌──────────────────────────┐   │
+│ │ 選択肢 / テキスト入力    │   │ ← 入力エリア  
+│ └──────────────────────────┘   │
+├────────────────────────────────┤
+│     3 / 10 ラリー              │ ← フッター
+└────────────────────────────────┘
+```
+
+### 2. `src/components/TextChat.tsx` (修正)
+
+- `FortuneSessionView` の代わりに `TextChatSessionView` を使用
+- `onLeave` propを渡して終了機能を有効化
+- `children` から直接メッセージ一覧と入力UIを統合
+
+---
+
+## 技術的な詳細
+
+### TextChatSessionView の props
+
+```typescript
+interface TextChatSessionViewProps {
+  agent: Agent;
+  displayName?: string | null;
+  isConnecting?: boolean;
+  rallyCount?: number;
+  maxRallies?: number;
+  showRallyCounter?: boolean;
+  isExempt?: boolean;
+  ticketBalance?: number;
+  onLeave?: () => void;
+  // チャット専用props
+  messages: Message[];
+  isSending: boolean;
+  choices?: string[];
+  onChoiceSelect: (choice: string) => void;
+  onCustomInput: (text: string) => void;
+  isRallyLimitReached: boolean;
+}
+```
+
+### レイアウト構成
+
+- 全画面表示（`fixed inset-0`）
+- ダークグラデーション背景
+- スクロール可能なチャットエリア
+- 下部に選択肢と入力フィールド
 
 ---
 
 ## 期待される動作
-1. 「占いを始める」→ 入室アニメ → ルーム画面表示
-2. 接続成功 → 会話開始、ルーム画面を維持
-3. 予期しない切断 → ルーム画面内で「切断されました」表示、再接続または戻るオプション
-4. ユーザーが終了ボタン → ホーム画面に戻る
 
+1. ユーザーがテキストモードを選択
+2. 「占いを始める」ボタンをクリック
+3. 入室アニメーション表示
+4. テキストチャット専用のセッション画面が表示される
+5. 占い師からの初回メッセージが表示される
+6. 選択肢をタップまたはテキスト入力で会話継続
+7. 「終了」ボタンでホーム画面に戻る
