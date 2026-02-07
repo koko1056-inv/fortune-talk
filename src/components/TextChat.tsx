@@ -28,7 +28,7 @@ const TextChat = ({ onSessionChange }: TextChatProps) => {
   const { user } = useAuth();
   const { profile } = useProfile();
   const { billingStatus, isFirstFreeReading, useTicket, refetch: refetchBilling } = useBillingStatus();
-  const { extractInsights, getRelevantContext } = useConversationInsights();
+  const { extractInsights, searchRelevantInsights } = useConversationInsights();
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isConnected, setIsConnected] = useState(false);
@@ -107,8 +107,8 @@ const TextChat = ({ onSessionChange }: TextChatProps) => {
       const chatMessages = messages.map(m => ({ role: m.role, content: m.content }));
       chatMessages.push({ role: "user" as const, content: userMessage });
 
-      // Get past context from RAG knowledge base
-      const pastContext = getRelevantContext(10);
+      // Get past context using vector similarity search (RAG)
+      const { context: pastContext } = await searchRelevantInsights(userMessage, 0.5, 5);
 
       const { data, error } = await supabase.functions.invoke("fortune-chat", {
         body: {
@@ -152,7 +152,7 @@ const TextChat = ({ onSessionChange }: TextChatProps) => {
     } finally {
       setIsSending(false);
     }
-  }, [messages, selectedAgent, profile, rallyCount, billingStatus.isExempt, saveMessageToDb, updateSessionRallyCount]);
+  }, [messages, selectedAgent, profile, rallyCount, billingStatus.isExempt, saveMessageToDb, updateSessionRallyCount, searchRelevantInsights]);
 
   const handleUseTicketToContinue = useCallback(async () => {
     if (billingStatus.ticketBalance <= 0) {

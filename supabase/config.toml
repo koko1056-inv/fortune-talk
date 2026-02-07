@@ -11,3 +11,9 @@ verify_jwt = false
 
 [functions.elevenlabs-conversation-token]
 verify_jwt = false
+
+[functions.extract-conversation-insights]
+verify_jwt = false
+
+[functions.search-relevant-insights]
+verify_jwt = false
