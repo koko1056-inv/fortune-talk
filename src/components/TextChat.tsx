@@ -226,7 +226,7 @@ const TextChat = ({ onSessionChange }: TextChatProps) => {
     setMessages([]);
     setRallyCount(0);
     setShowTicketDialog(false);
-    toast.info("チャットを終了しました");
+    // Session ended - no toast notification needed as user returns to home screen
   }, [user, rallyCount, refetchBilling]);
 
   const handleEnterAnimationComplete = useCallback(() => {
