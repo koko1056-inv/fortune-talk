@@ -26,6 +26,7 @@ const Index = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [chatMode, setChatMode] = useState<ChatMode>("voice");
+  const [isInSession, setIsInSession] = useState(false);
   const chatRef = useRef<HTMLDivElement>(null);
   const {
     profile
@@ -34,6 +35,10 @@ const Index = () => {
   const handleNavigate = (path: string) => {
     console.log(`Navigating to: ${path}`);
     navigate(path);
+  };
+
+  const handleSessionChange = (inSession: boolean) => {
+    setIsInSession(inSession);
   };
 
   // Listen for widget start-fortune event
@@ -52,6 +57,26 @@ const Index = () => {
       window.removeEventListener('widget-start-fortune', handleWidgetStartFortune);
     };
   }, []);
+
+  // When in session, show fullscreen immersive view
+  if (isInSession) {
+    return (
+      <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden">
+        <BackgroundMusic />
+        <StarField />
+        <div className="relative z-10 flex flex-col items-center justify-center w-full h-full px-4 py-8">
+          <main className="w-full max-w-xl">
+            {chatMode === "voice" ? (
+              <VoiceChat onSessionChange={handleSessionChange} />
+            ) : (
+              <TextChat onSessionChange={handleSessionChange} />
+            )}
+          </main>
+        </div>
+      </div>
+    );
+  }
+
   return <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden">
     {/* Background Music */}
     <BackgroundMusic />
@@ -138,7 +163,11 @@ const Index = () => {
 
       {/* Chat Interface */}
       <main ref={chatRef} className="w-full">
-        {chatMode === "voice" ? <VoiceChat /> : <TextChat />}
+        {chatMode === "voice" ? (
+          <VoiceChat onSessionChange={handleSessionChange} />
+        ) : (
+          <TextChat onSessionChange={handleSessionChange} />
+        )}
       </main>
 
       {/* Mode Toggle - below the start button */}
