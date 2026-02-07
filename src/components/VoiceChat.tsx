@@ -34,13 +34,13 @@ const VoiceChat = () => {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isUsingTicket, setIsUsingTicket] = useState(false);
   const [showEnterAnimation, setShowEnterAnimation] = useState(false);
+  const [isInSession, setIsInSession] = useState(false);
   const sessionStartRef = useRef<Date | null>(null);
   const currentAgentRef = useRef<Agent | null>(null);
   const isFreeReadingRef = useRef(false);
   const reconnectAttemptRef = useRef(0);
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const maxReconnectAttempts = 3;
-  const pendingStartRef = useRef(false);
 
   // Set initial selected agent when agents are loaded
   useEffect(() => {
@@ -126,6 +126,7 @@ const VoiceChat = () => {
     onDisconnect: () => {
       console.log("Disconnected from agent");
       setIsConnectedState(false);
+      setIsInSession(false);
       stopTimer();
       setElapsedSeconds(0);
       if (user && sessionStartRef.current && currentAgentRef.current) {
@@ -234,24 +235,24 @@ const VoiceChat = () => {
   }, [conversation]);
 
   const handleEnterAnimationComplete = useCallback(() => {
+    // Animation completed - startConversation was already called during animation
     setShowEnterAnimation(false);
-    if (pendingStartRef.current) {
-      pendingStartRef.current = false;
-      startConversation();
-    }
-  }, [startConversation]);
+  }, []);
 
-  const handleButtonClick = () => {
+  const handleButtonClick = async () => {
     if (conversation.status === "connected") {
+      setIsInSession(false);
       stopConversation();
     } else {
       if (!user) {
         setShowLoginDialog(true);
         return;
       }
-      // Show enter animation first
-      pendingStartRef.current = true;
+      // Enter session mode and show animation
+      setIsInSession(true);
       setShowEnterAnimation(true);
+      // Start conversation during the animation
+      await startConversation();
     }
   };
 
@@ -287,7 +288,7 @@ const VoiceChat = () => {
         />
       )}
       <div className="flex flex-col items-center gap-6 md:gap-10 w-full">
-      {!isConversationConnected && (
+      {!isConversationConnected && !isInSession && (
         <AgentSelector
           agents={agents}
           selectedAgent={selectedAgent}
@@ -296,13 +297,13 @@ const VoiceChat = () => {
         />
       )}
 
-        {isConversationConnected && currentAgentRef.current && (
+        {(isConversationConnected || isInSession) && (currentAgentRef.current || selectedAgent) && (
           <FortuneSessionView
-            agent={currentAgentRef.current}
+            agent={(currentAgentRef.current || selectedAgent)!}
             displayName={profile?.display_name}
-            isConnecting={isConnecting}
-            elapsedSeconds={!billingStatus.isExempt ? elapsedSeconds : undefined}
-            maxSeconds={!billingStatus.isExempt ? MAX_SECONDS_PER_TICKET : undefined}
+            isConnecting={isConnecting || !isConversationConnected}
+            elapsedSeconds={!billingStatus.isExempt && isConversationConnected ? elapsedSeconds : undefined}
+            maxSeconds={!billingStatus.isExempt && isConversationConnected ? MAX_SECONDS_PER_TICKET : undefined}
           >
             <div className="flex flex-col items-center gap-4">
               <AudioVisualizer isActive={isConversationConnected} isSpeaking={conversation.isSpeaking} />

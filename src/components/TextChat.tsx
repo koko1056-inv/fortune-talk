@@ -38,7 +38,6 @@ const TextChat = () => {
   const currentAgentRef = useRef<Agent | null>(null);
   const isFreeReadingRef = useRef(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const pendingStartRef = useRef(false);
 
   useEffect(() => {
     if (agents.length > 0 && !selectedAgent) {
@@ -160,15 +159,7 @@ const TextChat = () => {
   const startChat = useCallback(async () => {
     if (!selectedAgent) return;
 
-    if (!user) {
-      setShowLoginDialog(true);
-      return;
-    }
-
-    if (user && !billingStatus.isExempt && !isFirstFreeReading && billingStatus.ticketBalance <= 0) {
-      toast.error("チケットが不足しています", { description: "チケットを購入してください" });
-      return;
-    }
+    // Note: ticket validation now happens in handleStartClick before animation starts
 
     isFreeReadingRef.current = isFirstFreeReading;
     setIsConnecting(true);
@@ -230,22 +221,29 @@ const TextChat = () => {
   }, [user, rallyCount, refetchBilling]);
 
   const handleEnterAnimationComplete = useCallback(() => {
+    // Animation completed - startChat was already called during animation
+    // Just hide the overlay now
     setShowEnterAnimation(false);
-    if (pendingStartRef.current) {
-      pendingStartRef.current = false;
-      startChat();
-    }
-  }, [startChat]);
+  }, []);
 
-  const handleStartClick = useCallback(() => {
+  const handleStartClick = useCallback(async () => {
     if (!user) {
       setShowLoginDialog(true);
       return;
     }
-    // Show enter animation first
-    pendingStartRef.current = true;
+    
+    // Validate ticket availability before starting
+    if (!billingStatus.isExempt && !isFirstFreeReading && billingStatus.ticketBalance <= 0) {
+      toast.error("チケットが不足しています", { description: "チケットを購入してください" });
+      return;
+    }
+    
+    // Show enter animation and start chat immediately
     setShowEnterAnimation(true);
-  }, [user]);
+    
+    // Start the chat session during the animation
+    await startChat();
+  }, [user, billingStatus, isFirstFreeReading, startChat]);
 
   if (agentsLoading || !selectedAgent) {
     return (
@@ -295,7 +293,7 @@ const TextChat = () => {
         onCancel={() => setShowLoginDialog(false)}
       />
 
-        {!isConnected && (
+        {!isConnected && !isConnecting && (
           <AgentSelector
             agents={agents}
             selectedAgent={selectedAgent}
@@ -304,14 +302,14 @@ const TextChat = () => {
           />
         )}
 
-        {isConnected && currentAgentRef.current && (
+        {(isConnected || isConnecting) && (currentAgentRef.current || selectedAgent) && (
           <FortuneSessionView
-            agent={currentAgentRef.current}
+            agent={(currentAgentRef.current || selectedAgent)!}
             displayName={profile?.display_name}
-            isConnecting={isSending && messages.length === 0}
+            isConnecting={isConnecting || (isSending && messages.length === 0)}
             rallyCount={rallyCount}
             maxRallies={MAX_RALLIES_PER_TICKET}
-            showRallyCounter={!billingStatus.isExempt}
+            showRallyCounter={!billingStatus.isExempt && isConnected}
           >
             <div className="w-full glass-surface rounded-xl overflow-hidden">
               <ChatMessages messages={messages} isSending={isSending} ref={scrollRef} />
