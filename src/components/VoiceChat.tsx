@@ -134,10 +134,7 @@ const VoiceChat = ({ onSessionChange }: VoiceChatProps) => {
       setConnectionError(null);
       startTimer();
 
-      const profileInfo = profile?.display_name
-        ? `${profile.display_name}さん、${selectedAgent?.name}と接続しました`
-        : `${selectedAgent?.name}と接続しました`;
-      toast.success(profileInfo, { description: "話しかけてください" });
+      // Connection successful - no toast notification needed as the UI already shows the connected state
     },
     onDisconnect: () => {
       console.log("[VoiceChat] Disconnected from agent, userRequestedEnd:", userRequestedEndRef.current);
