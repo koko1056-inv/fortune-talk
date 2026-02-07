@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import AgentSelector, { Agent } from "./AgentSelector";
 import TextChatButton from "./TextChatButton";
-import ConnectedAgentDisplay from "./ConnectedAgentDisplay";
+import FortuneSessionView from "./FortuneSessionView";
 import ChatMessages, { Message } from "./ChatMessages";
 import ChatInput from "./ChatInput";
 import TicketRequiredDialog from "./TicketRequiredDialog";
@@ -295,38 +295,37 @@ const TextChat = () => {
         onCancel={() => setShowLoginDialog(false)}
       />
 
-      {!isConnected && (
-        <AgentSelector
-          agents={agents}
-          selectedAgent={selectedAgent}
-          onSelect={setSelectedAgent}
-          disabled={isConnecting}
-        />
-      )}
+        {!isConnected && (
+          <AgentSelector
+            agents={agents}
+            selectedAgent={selectedAgent}
+            onSelect={setSelectedAgent}
+            disabled={isConnecting}
+          />
+        )}
 
-      {isConnected && currentAgentRef.current && (
-        <ConnectedAgentDisplay
-          agent={currentAgentRef.current}
-          variant="small"
-          rallyCount={rallyCount}
-          maxRallies={MAX_RALLIES_PER_TICKET}
-          showRallyCounter={!billingStatus.isExempt}
-        />
-      )}
-
-      {isConnected && (
-        <div className="w-full glass-surface rounded-xl overflow-hidden">
-          <ChatMessages messages={messages} isSending={isSending} ref={scrollRef} />
-          {!isRallyLimitReached && messages.length > 0 && !isSending && (
-            <ChatInput
-              choices={currentChoices}
-              onChoiceSelect={sendMessageToAI}
-              onCustomInput={sendMessageToAI}
-              isSending={isSending}
-            />
-          )}
-        </div>
-      )}
+        {isConnected && currentAgentRef.current && (
+          <FortuneSessionView
+            agent={currentAgentRef.current}
+            displayName={profile?.display_name}
+            isConnecting={isSending && messages.length === 0}
+            rallyCount={rallyCount}
+            maxRallies={MAX_RALLIES_PER_TICKET}
+            showRallyCounter={!billingStatus.isExempt}
+          >
+            <div className="w-full glass-surface rounded-xl overflow-hidden">
+              <ChatMessages messages={messages} isSending={isSending} ref={scrollRef} />
+              {!isRallyLimitReached && messages.length > 0 && !isSending && (
+                <ChatInput
+                  choices={currentChoices}
+                  onChoiceSelect={sendMessageToAI}
+                  onCustomInput={sendMessageToAI}
+                  isSending={isSending}
+                />
+              )}
+            </div>
+          </FortuneSessionView>
+        )}
 
         <TextChatButton
           isConnected={isConnected}
