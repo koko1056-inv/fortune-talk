@@ -3,9 +3,8 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import AgentSelector, { Agent } from "./AgentSelector";
 import TextChatButton from "./TextChatButton";
-import FortuneSessionView from "./FortuneSessionView";
-import ChatMessages, { Message } from "./ChatMessages";
-import ChatInput from "./ChatInput";
+import TextChatSessionView from "./TextChatSessionView";
+import { Message } from "./ChatMessages";
 import TicketRequiredDialog from "./TicketRequiredDialog";
 import LoginRequiredDialog from "./LoginRequiredDialog";
 import ProfileHint from "./ProfileHint";
@@ -316,26 +315,21 @@ const TextChat = ({ onSessionChange }: TextChatProps) => {
         )}
 
         {(isConnected || isConnecting) && (currentAgentRef.current || selectedAgent) && (
-          <FortuneSessionView
+          <TextChatSessionView
             agent={(currentAgentRef.current || selectedAgent)!}
             displayName={profile?.display_name}
-            isConnecting={isConnecting || (isSending && messages.length === 0)}
+            isConnecting={isConnecting}
             rallyCount={rallyCount}
             maxRallies={MAX_RALLIES_PER_TICKET}
             showRallyCounter={!billingStatus.isExempt && isConnected}
-          >
-            <div className="w-full glass-surface rounded-xl overflow-hidden">
-              <ChatMessages messages={messages} isSending={isSending} ref={scrollRef} />
-              {!isRallyLimitReached && messages.length > 0 && !isSending && (
-                <ChatInput
-                  choices={currentChoices}
-                  onChoiceSelect={sendMessageToAI}
-                  onCustomInput={sendMessageToAI}
-                  isSending={isSending}
-                />
-              )}
-            </div>
-          </FortuneSessionView>
+            onLeave={endChat}
+            messages={messages}
+            isSending={isSending}
+            choices={currentChoices}
+            onChoiceSelect={sendMessageToAI}
+            onCustomInput={sendMessageToAI}
+            isRallyLimitReached={isRallyLimitReached}
+          />
         )}
 
         <TextChatButton
