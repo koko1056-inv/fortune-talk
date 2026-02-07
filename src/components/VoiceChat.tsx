@@ -17,6 +17,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
 import { useFortuneHistory } from "@/hooks/useFortuneHistory";
 import { useBillingStatus } from "@/hooks/useBillingStatus";
+import { supabase } from "@/integrations/supabase/client";
 
 const MAX_SECONDS_PER_TICKET = 180; // 3 minutes per ticket
 
@@ -39,18 +40,17 @@ const VoiceChat = ({ onSessionChange }: VoiceChatProps) => {
   const [isUsingTicket, setIsUsingTicket] = useState(false);
   const [showEnterAnimation, setShowEnterAnimation] = useState(false);
   const [isInSession, setIsInSession] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
   const sessionStartRef = useRef<Date | null>(null);
   const currentAgentRef = useRef<Agent | null>(null);
   const isFreeReadingRef = useRef(false);
   const reconnectAttemptRef = useRef(0);
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const userRequestedEndRef = useRef(false); // Track if user explicitly ended the session
-  const hasEverConnectedRef = useRef(false); // Track if connection was ever established
+  const userRequestedEndRef = useRef(false);
+  const hasEverConnectedRef = useRef(false);
   const maxReconnectAttempts = 3;
 
-  // Notify parent of session state changes - stable "room mode" logic
-  // We are in "room mode" when: session is active OR animation is showing OR connecting
-  // We ONLY exit room mode when session explicitly ends (disconnect or user cancel)
+  // Notify parent of session state changes
   useEffect(() => {
     const inRoomMode = isInSession || showEnterAnimation || isConnecting;
     console.log("[VoiceChat] Session state:", { isInSession, showEnterAnimation, isConnecting, inRoomMode });
@@ -98,7 +98,6 @@ const VoiceChat = ({ onSessionChange }: VoiceChatProps) => {
     timerIntervalRef.current = setInterval(() => {
       setElapsedSeconds(prev => {
         const newValue = prev + 1;
-        // Warning at 30 seconds remaining
         if (!billingStatus.isExempt && newValue === MAX_SECONDS_PER_TICKET - 30) {
           toast.warning("残り30秒です");
         }
@@ -132,6 +131,7 @@ const VoiceChat = ({ onSessionChange }: VoiceChatProps) => {
       sessionStartRef.current = new Date();
       currentAgentRef.current = selectedAgent;
       setIsConnectedState(true);
+      setConnectionError(null);
       startTimer();
 
       const profileInfo = profile?.display_name
@@ -166,16 +166,16 @@ const VoiceChat = ({ onSessionChange }: VoiceChatProps) => {
         userRequestedEndRef.current = false;
         hasEverConnectedRef.current = false;
         toast.info("鑑定を終了しました");
-      } else {
-        // Unexpected disconnect - show error but stay in room
-        toast.error("接続が切断されました", { 
-          description: "「占いを始める」ボタンで再接続できます" 
-        });
+      } else if (hasEverConnectedRef.current) {
+        // Unexpected disconnect after successful connection
+        setConnectionError("接続が切断されました。再接続するにはマイクボタンをタップしてください。");
+        toast.error("接続が切断されました");
       }
     },
     onError: (error) => {
       console.error("[VoiceChat] Error:", error);
-      // Don't exit session on error - let user retry or explicitly leave
+      setConnectionError(`接続エラー: ${error}`);
+      
       if (reconnectAttemptRef.current < maxReconnectAttempts && selectedAgent) {
         reconnectAttemptRef.current += 1;
         toast.warning(`接続が不安定です (再試行 ${reconnectAttemptRef.current}/${maxReconnectAttempts})`, {
@@ -185,24 +185,42 @@ const VoiceChat = ({ onSessionChange }: VoiceChatProps) => {
       } else {
         reconnectAttemptRef.current = 0;
         toast.error("接続エラーが発生しました", { 
-          description: "「占いを始める」ボタンで再試行できます" 
+          description: "マイクボタンをタップして再試行できます" 
         });
       }
+    },
+    onMessage: (message) => {
+      console.log("[VoiceChat] Message from agent:", message);
     },
   });
 
   const startConversationInternal = useCallback(async () => {
     if (!selectedAgent) return;
     setIsConnecting(true);
+    setConnectionError(null);
+    
     try {
       await navigator.mediaDevices.getUserMedia({
         audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, sampleRate: 16000, channelCount: 1 },
       });
 
+      // Get signed URL from edge function for secure connection
+      console.log("[VoiceChat] Getting signed URL for agent:", selectedAgent.agentId);
+      const { data: tokenData, error: tokenError } = await supabase.functions.invoke(
+        "elevenlabs-conversation-token",
+        { body: { agentId: selectedAgent.agentId } }
+      );
+
+      if (tokenError || !tokenData?.signed_url) {
+        console.error("[VoiceChat] Token error:", tokenError, tokenData);
+        throw new Error(tokenData?.error || tokenError?.message || "トークンの取得に失敗しました");
+      }
+
+      console.log("[VoiceChat] Got signed URL, starting session...");
+
       const dynamicPrompt = buildDynamicPrompt();
       const sessionOptions: any = {
-        agentId: selectedAgent.agentId,
-        connectionType: "webrtc",
+        signedUrl: tokenData.signed_url,
         microphone: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 },
       };
 
@@ -218,11 +236,14 @@ const VoiceChat = ({ onSessionChange }: VoiceChatProps) => {
 
       await (conversation.startSession as any)(sessionOptions);
     } catch (error) {
-      console.error("Failed to start conversation:", error);
+      console.error("[VoiceChat] Failed to start conversation:", error);
       if (error instanceof Error && error.name === "NotAllowedError") {
+        setConnectionError("マイクへのアクセスが拒否されました。ブラウザの設定を確認してください。");
         toast.error("マイクへのアクセスが必要です", { description: "ブラウザの設定を確認してください" });
       } else {
-        toast.error("接続に失敗しました", { description: "もう一度お試しください" });
+        const message = error instanceof Error ? error.message : "接続に失敗しました";
+        setConnectionError(message);
+        toast.error("接続に失敗しました", { description: message });
       }
     } finally {
       setIsConnecting(false);
@@ -359,7 +380,8 @@ const VoiceChat = ({ onSessionChange }: VoiceChatProps) => {
             isExempt={billingStatus.isExempt}
             onMicClick={handleButtonClick}
             isConnected={isConversationConnected}
-            statusText={isConnecting ? "CONNECTING..." : conversation.isSpeaking ? "SPEAKING..." : isConversationConnected ? "LISTENING..." : "READY"}
+            statusText={isConnecting ? "CONNECTING..." : conversation.isSpeaking ? "SPEAKING..." : isConversationConnected ? "LISTENING..." : connectionError ? "ERROR" : "TAP TO START"}
+            connectionError={connectionError}
           />
         )}
 

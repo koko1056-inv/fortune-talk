@@ -1,7 +1,7 @@
 import { memo } from "react";
 import { Agent } from "./AgentSelector";
 import { Button } from "@/components/ui/button";
-import { X, MoreHorizontal, Mic, MessageSquare, Volume2, Sparkles, Star } from "lucide-react";
+import { X, MoreHorizontal, Mic, MessageSquare, Volume2, Sparkles, Star, AlertCircle, RefreshCw, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface FortuneSessionViewProps {
@@ -22,6 +22,7 @@ export interface FortuneSessionViewProps {
   onChatClick?: () => void;
   isConnected?: boolean;
   statusText?: string;
+  connectionError?: string | null;
 }
 
 const formatTime = (seconds: number) => {
@@ -48,6 +49,7 @@ const FortuneSessionView = memo(({
   onChatClick,
   isConnected = false,
   statusText,
+  connectionError,
 }: FortuneSessionViewProps) => {
   const showTimer = elapsedSeconds !== undefined && maxSeconds !== undefined;
   const timeRemaining = showTimer ? maxSeconds - elapsedSeconds : 0;
@@ -55,22 +57,29 @@ const FortuneSessionView = memo(({
 
   // Generate a mystical message based on state
   const getAgentMessage = () => {
+    if (connectionError) {
+      return `「${connectionError}」`;
+    }
     if (isConnecting) {
       return "「運命の扉を開いています... しばらくお待ちください。」";
     }
     if (isSpeaking) {
       return "「あなたの運命の糸が見えます... 今、あなたが心に抱いている不安を、一つずつ紐解いていきましょう。」";
     }
-    return "「心を開いて、あなたの声を聴かせてください...」";
+    if (isConnected) {
+      return "「心を開いて、あなたの声を聴かせてください...」";
+    }
+    return "「マイクボタンをタップして、占いを始めましょう...」";
   };
 
   // Status text for the bottom
   const getStatusText = () => {
     if (statusText) return statusText;
+    if (connectionError) return "CONNECTION ERROR";
     if (isConnecting) return "CONNECTING...";
     if (isSpeaking) return "SPEAKING...";
     if (isConnected) return "LISTENING...";
-    return "READY";
+    return "TAP TO START";
   };
 
   return (
@@ -204,6 +213,11 @@ const FortuneSessionView = memo(({
                 )} />
               </>
             )}
+
+            {/* Error indicator ring */}
+            {connectionError && !isConnecting && (
+              <div className="absolute w-24 h-24 rounded-full bg-destructive/20 animate-pulse" />
+            )}
             
             {/* Main mic button */}
             <button
@@ -213,17 +227,28 @@ const FortuneSessionView = memo(({
                 "relative z-10 w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300",
                 "focus:outline-none focus-visible:ring-4 focus-visible:ring-accent/50",
                 isConnecting && "opacity-70 cursor-not-allowed",
-                !isConnecting && "hover:scale-105 active:scale-95"
+                !isConnecting && "hover:scale-105 active:scale-95",
+                connectionError && !isConnecting && "ring-2 ring-destructive/50"
               )}
               style={{
-                background: 'linear-gradient(135deg, hsl(280 60% 55%), hsl(260 50% 45%))',
-                boxShadow: '0 0 40px hsl(280 60% 50% / 0.4), inset 0 2px 0 hsl(280 50% 70% / 0.3), 0 10px 30px -10px hsl(260 50% 20% / 0.8)',
+                background: connectionError && !isConnecting
+                  ? 'linear-gradient(135deg, hsl(0 60% 45%), hsl(0 50% 35%))'
+                  : 'linear-gradient(135deg, hsl(280 60% 55%), hsl(260 50% 45%))',
+                boxShadow: connectionError && !isConnecting
+                  ? '0 0 40px hsl(0 60% 50% / 0.4), inset 0 2px 0 hsl(0 50% 60% / 0.3), 0 10px 30px -10px hsl(0 50% 20% / 0.8)'
+                  : '0 0 40px hsl(280 60% 50% / 0.4), inset 0 2px 0 hsl(280 50% 70% / 0.3), 0 10px 30px -10px hsl(260 50% 20% / 0.8)',
               }}
             >
-              <Mic className={cn(
-                "w-8 h-8 transition-colors",
-                isConnected ? "text-white" : "text-white/90"
-              )} />
+              {isConnecting ? (
+                <Loader2 className="w-8 h-8 text-white animate-spin" />
+              ) : connectionError ? (
+                <RefreshCw className="w-8 h-8 text-white" />
+              ) : (
+                <Mic className={cn(
+                  "w-8 h-8 transition-colors",
+                  isConnected ? "text-white" : "text-white/90"
+                )} />
+              )}
             </button>
 
             {/* Ticket info */}
@@ -238,14 +263,17 @@ const FortuneSessionView = memo(({
             {showTimer && (
               <div className={cn(
                 "mt-1 text-[10px] tracking-wider",
-                isTimeWarning ? "text-red-400" : "text-muted-foreground"
+                isTimeWarning ? "text-destructive" : "text-muted-foreground"
               )}>
                 残り {formatTime(timeRemaining)}
               </div>
             )}
 
             {/* Status text */}
-            <p className="mt-2 text-xs tracking-[0.2em] text-accent font-medium">
+            <p className={cn(
+              "mt-2 text-xs tracking-[0.2em] font-medium",
+              connectionError ? "text-destructive" : "text-accent"
+            )}>
               {getStatusText()}
             </p>
           </div>
