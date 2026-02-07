@@ -350,27 +350,28 @@ const VoiceChat = ({ onSessionChange }: VoiceChatProps) => {
           <FortuneSessionView
             agent={(currentAgentRef.current || selectedAgent)!}
             displayName={profile?.display_name}
-            isConnecting={isConnecting || !isConversationConnected}
+            isConnecting={isConnecting}
             elapsedSeconds={!billingStatus.isExempt && isConversationConnected ? elapsedSeconds : undefined}
             maxSeconds={!billingStatus.isExempt && isConversationConnected ? MAX_SECONDS_PER_TICKET : undefined}
             onLeave={handleLeaveRoom}
-          >
-            <div className="flex flex-col items-center gap-4">
-              <AudioVisualizer isActive={isConversationConnected} isSpeaking={conversation.isSpeaking} />
-              <StatusIndicator
-                status={isConnecting ? "connecting" : conversation.status}
-                isSpeaking={conversation.isSpeaking}
-              />
-            </div>
-          </FortuneSessionView>
+            isSpeaking={conversation.isSpeaking}
+            ticketBalance={billingStatus.ticketBalance}
+            isExempt={billingStatus.isExempt}
+            onMicClick={handleButtonClick}
+            isConnected={isConversationConnected}
+            statusText={isConnecting ? "CONNECTING..." : conversation.isSpeaking ? "SPEAKING..." : isConversationConnected ? "LISTENING..." : "READY"}
+          />
         )}
 
-      <VoiceButton
-        isConnected={isConversationConnected}
-        isConnecting={isConnecting}
-        isSpeaking={conversation.isSpeaking}
-        onClick={handleButtonClick}
-      />
+      {/* Only show VoiceButton when not in session */}
+      {!isInSession && (
+        <VoiceButton
+          isConnected={isConversationConnected}
+          isConnecting={isConnecting}
+          isSpeaking={conversation.isSpeaking}
+          onClick={handleButtonClick}
+        />
+      )}
 
       {!isConversationConnected && !user && <ProfileHint />}
 
