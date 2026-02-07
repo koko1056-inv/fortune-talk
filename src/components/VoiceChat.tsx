@@ -46,12 +46,14 @@ const VoiceChat = ({ onSessionChange }: VoiceChatProps) => {
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const maxReconnectAttempts = 3;
 
-  // Notify parent of session state changes
+  // Notify parent of session state changes - stable "room mode" logic
+  // We are in "room mode" when: session is active OR animation is showing OR connecting
+  // We ONLY exit room mode when session explicitly ends (disconnect or user cancel)
   useEffect(() => {
-    // Keep parent notified of session state - isInSession is the source of truth
-    // showEnterAnimation is just for the visual transition
-    onSessionChange?.(isInSession);
-  }, [isInSession, onSessionChange]);
+    const inRoomMode = isInSession || showEnterAnimation || isConnecting;
+    console.log("[VoiceChat] Session state:", { isInSession, showEnterAnimation, isConnecting, inRoomMode });
+    onSessionChange?.(inRoomMode);
+  }, [isInSession, showEnterAnimation, isConnecting, onSessionChange]);
 
   // Set initial selected agent when agents are loaded
   useEffect(() => {

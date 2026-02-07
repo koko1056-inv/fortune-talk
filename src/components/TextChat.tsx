@@ -43,9 +43,13 @@ const TextChat = ({ onSessionChange }: TextChatProps) => {
   const isFreeReadingRef = useRef(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Notify parent of session state changes
+  // Notify parent of session state changes - stable "room mode" logic
+  // We are in "room mode" when: connected OR connecting OR animation showing
+  // This ensures we stay in fullscreen mode throughout the entire session
   useEffect(() => {
-    onSessionChange?.(isConnected || isConnecting || showEnterAnimation);
+    const inRoomMode = isConnected || isConnecting || showEnterAnimation;
+    console.log("[TextChat] Session state:", { isConnected, isConnecting, showEnterAnimation, inRoomMode });
+    onSessionChange?.(inRoomMode);
   }, [isConnected, isConnecting, showEnterAnimation, onSessionChange]);
 
   useEffect(() => {
