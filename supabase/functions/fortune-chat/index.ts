@@ -20,9 +20,10 @@ interface RequestBody {
     bloodType?: string;
   };
   generateChoices?: boolean;
+  pastContext?: string;
 }
 
-const getAgentSystemPrompt = (agentType: string, userProfile?: RequestBody["userProfile"]) => {
+const getAgentSystemPrompt = (agentType: string, userProfile?: RequestBody["userProfile"], pastContext?: string) => {
   const profileInfo = userProfile ? `
 【相談者のプロフィール情報】
 ${userProfile.displayName ? `名前: ${userProfile.displayName}` : ""}
@@ -31,6 +32,14 @@ ${userProfile.zodiacSign ? `星座: ${userProfile.zodiacSign}` : ""}
 ${userProfile.bloodType ? `血液型: ${userProfile.bloodType}型` : ""}
 
 この情報を参考にして、パーソナライズされた占いを提供してください。
+` : "";
+
+  const pastContextInfo = pastContext ? `
+【過去の相談履歴】
+以下は相談者の過去の相談内容の要約です。この情報を参考にして、継続的で一貫性のあるアドバイスを心がけてください。
+過去のアドバイスと矛盾しないよう注意し、相談者の成長や変化を踏まえた助言をしてください。
+
+${pastContext}
 ` : "";
 
   const basePrompts: Record<string, string> = {
@@ -52,11 +61,13 @@ ${userProfile.bloodType ? `血液型: ${userProfile.bloodType}型` : ""}
   return `${basePrompt}
 
 ${profileInfo}
+${pastContextInfo}
 
 重要なルール:
 - 常に日本語で回答してください
 - 占いの結果は具体的で前向きな内容にしてください
 - 相談者の質問や選択に基づいて、パーソナライズされた回答を心がけてください
+- 過去の相談履歴がある場合は、それを踏まえた継続的なアドバイスを心がけてください
 - 回答は100-200文字程度で簡潔にまとめてください`;
 };
 
@@ -76,14 +87,14 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, agentType, userProfile, generateChoices = true }: RequestBody = await req.json();
+    const { messages, agentType, userProfile, generateChoices = true, pastContext }: RequestBody = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const systemPrompt = getAgentSystemPrompt(agentType, userProfile) + 
+    const systemPrompt = getAgentSystemPrompt(agentType, userProfile, pastContext) + 
       (generateChoices ? generateChoicesPrompt : "");
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {

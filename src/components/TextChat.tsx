@@ -13,6 +13,7 @@ import { useAgentConfig } from "@/hooks/useAgentConfig";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
 import { useBillingStatus } from "@/hooks/useBillingStatus";
+import { useConversationInsights } from "@/hooks/useConversationInsights";
 import { supabase } from "@/integrations/supabase/client";
 
 const MAX_RALLIES_PER_TICKET = 10;
@@ -27,6 +28,7 @@ const TextChat = ({ onSessionChange }: TextChatProps) => {
   const { user } = useAuth();
   const { profile } = useProfile();
   const { billingStatus, isFirstFreeReading, useTicket, refetch: refetchBilling } = useBillingStatus();
+  const { extractInsights, getRelevantContext } = useConversationInsights();
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isConnected, setIsConnected] = useState(false);
@@ -105,6 +107,9 @@ const TextChat = ({ onSessionChange }: TextChatProps) => {
       const chatMessages = messages.map(m => ({ role: m.role, content: m.content }));
       chatMessages.push({ role: "user" as const, content: userMessage });
 
+      // Get past context from RAG knowledge base
+      const pastContext = getRelevantContext(10);
+
       const { data, error } = await supabase.functions.invoke("fortune-chat", {
         body: {
           messages: chatMessages,
@@ -116,6 +121,7 @@ const TextChat = ({ onSessionChange }: TextChatProps) => {
             bloodType: profile.blood_type,
           } : undefined,
           generateChoices: true,
+          pastContext: pastContext || undefined,
         },
       });
 
@@ -216,6 +222,12 @@ const TextChat = ({ onSessionChange }: TextChatProps) => {
 
   const endChat = useCallback(async () => {
     if (user && sessionIdRef.current) {
+      // Extract insights from conversation before ending
+      if (messages.length >= 2 && currentAgentRef.current) {
+        const messagesToExtract = messages.map(m => ({ role: m.role, content: m.content }));
+        extractInsights(sessionIdRef.current, messagesToExtract, currentAgentRef.current.name);
+      }
+
       await supabase.from("chat_sessions").update({ ended_at: new Date().toISOString(), rally_count: rallyCount }).eq("id", sessionIdRef.current);
       sessionIdRef.current = null;
       currentAgentRef.current = null;
@@ -227,7 +239,7 @@ const TextChat = ({ onSessionChange }: TextChatProps) => {
     setRallyCount(0);
     setShowTicketDialog(false);
     // Session ended - no toast notification needed as user returns to home screen
-  }, [user, rallyCount, refetchBilling]);
+  }, [user, rallyCount, refetchBilling, messages, extractInsights]);
 
   const handleEnterAnimationComplete = useCallback(() => {
     // Animation completed - startChat was already called during animation
