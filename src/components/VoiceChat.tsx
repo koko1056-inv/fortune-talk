@@ -201,6 +201,14 @@ const VoiceChat = ({ onSessionChange }: VoiceChatProps) => {
         audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, sampleRate: 16000, channelCount: 1 },
       });
 
+      // Debug: Log full selected agent details
+      console.log("[VoiceChat] Selected agent details:", {
+        id: selectedAgent.id,
+        name: selectedAgent.name,
+        agentId: selectedAgent.agentId,
+        emoji: selectedAgent.emoji,
+      });
+
       // Get signed URL from edge function for secure connection
       console.log("[VoiceChat] Getting signed URL for agent:", selectedAgent.agentId);
       const { data: tokenData, error: tokenError } = await supabase.functions.invoke(
