@@ -87,7 +87,14 @@ const fetchAgentsFromDb = async (): Promise<AgentConfig[]> => {
   }
 
   if (data && data.length > 0) {
-    return data.map(mapDbToConfig);
+    const mapped = data.map(mapDbToConfig);
+    // Debug: Log the agent configs loaded from DB
+    console.log("[useAgentConfig] Loaded agents from DB:", mapped.map(a => ({
+      id: a.id,
+      name: a.name,
+      agentId: a.agentId,
+    })));
+    return mapped;
   }
 
   return DEFAULT_AGENTS;
