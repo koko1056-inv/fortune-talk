@@ -47,12 +47,19 @@ export const TicketPurchase = ({ currentBalance, onPurchaseRequest }: TicketPurc
       return;
     }
 
-    // Attempt to find matching IAP package
-    // Note: In a real app, you would map index to specific package identifiers from RevenueCat
-    if (packages.length > index) {
-      await purchasePackage(packages[index]);
+    // Match IAP package by product identifier (not by index)
+    const productIds = [
+      'com.fortunetalk.app.ticket_01',
+      'com.fortunetalk.app.ticket_10',
+      'com.fortunetalk.app.ticket_50',
+      'com.fortunetalk.app.ticket_100',
+    ];
+    const targetProductId = productIds[index];
+    const pkg = packages.find(p => p.product.productIdentifier === targetProductId);
+    if (pkg) {
+      await purchasePackage(pkg);
     } else {
-      toast.info('決済機能は準備中です。App Store ConnectおよびRevenueCatの設定が必要です。');
+      toast.info('商品情報を読み込み中です。しばらくお待ちください。');
     }
   };
 
