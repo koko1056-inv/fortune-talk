@@ -34,7 +34,7 @@ const packageGlows = [
 ];
 
 export const TicketPurchase = ({ currentBalance, onPurchaseRequest }: TicketPurchaseProps) => {
-  const { packages, purchasePackage, loading } = useInAppPurchase();
+  const { packages, purchasePackage, loading, isReady } = useInAppPurchase();
   const [selectedPackageIndex, setSelectedPackageIndex] = useState<number | null>(null);
   const [hoveredPackage, setHoveredPackage] = useState<number | null>(null);
 
@@ -54,12 +54,25 @@ export const TicketPurchase = ({ currentBalance, onPurchaseRequest }: TicketPurc
       'com.fortunetalk.app.ticket_50',
       'com.fortunetalk.app.ticket_100',
     ];
+    const shortIds = ['ticket_01', 'ticket_10', 'ticket_50', 'ticket_100'];
     const targetProductId = productIds[index];
-    const pkg = packages.find(p => p.product.productIdentifier === targetProductId);
+    const targetShortId = shortIds[index];
+
+    console.log('[IAP] Purchase attempt:', { index, targetProductId, packagesCount: packages.length });
+    packages.forEach(p => console.log('[IAP] Available:', p.identifier, p.product.productIdentifier));
+
+    const pkg = packages.find(p =>
+      p.product.productIdentifier === targetProductId ||
+      p.product.productIdentifier === targetShortId ||
+      p.identifier === targetShortId ||
+      p.identifier === `package_${targetShortId}`
+    );
     if (pkg) {
       await purchasePackage(pkg);
+    } else if (packages.length === 0) {
+      toast.error('商品情報を読み込み中です。アプリを再起動して再試行してください。');
     } else {
-      toast.info('商品情報を読み込み中です。しばらくお待ちください。');
+      toast.error(`商品が見つかりません (${targetProductId})`);
     }
   };
 

@@ -56,11 +56,32 @@ export const useInAppPurchase = () => {
     const loadOfferings = async () => {
         try {
             const offerings = await Purchases.getOfferings();
+            console.log("[IAP] getOfferings result:", JSON.stringify({
+                current: offerings.current?.identifier ?? null,
+                allKeys: Object.keys(offerings.all ?? {}),
+                currentPackages: offerings.current?.availablePackages?.map(p => ({
+                    id: p.identifier,
+                    productId: p.product.productIdentifier,
+                    price: p.product.priceString,
+                })) ?? [],
+            }));
+
             if (offerings.current && offerings.current.availablePackages.length > 0) {
                 setPackages(offerings.current.availablePackages);
+                console.log("[IAP] Packages loaded:", offerings.current.availablePackages.length);
+            } else {
+                // Fallback: try first available offering
+                const allOfferings = Object.values(offerings.all ?? {});
+                const firstWithPackages = allOfferings.find(o => o.availablePackages.length > 0);
+                if (firstWithPackages) {
+                    console.log("[IAP] Fallback to offering:", firstWithPackages.identifier);
+                    setPackages(firstWithPackages.availablePackages);
+                } else {
+                    console.warn("[IAP] No offerings with packages found");
+                }
             }
         } catch (error) {
-            console.error("Failed to load offerings:", error);
+            console.error("[IAP] Failed to load offerings:", error);
         }
     };
 
