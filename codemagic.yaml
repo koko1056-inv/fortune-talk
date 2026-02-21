@@ -59,6 +59,12 @@ workflows:
         script: |
           xcode-project use-profiles
 
+      - name: Set build number
+        script: |
+          NEW_BUILD=$(date +%Y%m%d%H%M)
+          cd ios/App && agvtool new-version -all $NEW_BUILD
+          echo "Build number set to: $NEW_BUILD"
+
       - name: Build iOS app
         script: |
           xcode-project build-ipa \
