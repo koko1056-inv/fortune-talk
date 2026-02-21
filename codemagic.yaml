@@ -26,6 +26,10 @@ workflows:
         script: |
           npm run build
 
+      - name: Fix CocoaPods xcodeproj compatibility
+        script: |
+          sudo gem update xcodeproj
+
       - name: Sync Capacitor
         script: |
           npx cap sync ios
