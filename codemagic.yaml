@@ -14,7 +14,7 @@ workflows:
         APP_STORE_CONNECT_KEY_IDENTIFIER: "7PY5UXRT74"
         APP_STORE_CONNECT_ISSUER_ID: "9c77cc55-b832-447a-9f47-45742df69211"
       node: 18
-      xcode: latest
+      xcode: 16.2
       cocoapods: default
     
     scripts:
@@ -26,12 +26,9 @@ workflows:
         script: |
           npm run build
 
-      - name: Fix CocoaPods xcodeproj compatibility
-        script: |
-          sudo gem update xcodeproj
-
       - name: Sync Capacitor
         script: |
+          gem update xcodeproj
           npx cap sync ios
 
       - name: Install CocoaPods dependencies
