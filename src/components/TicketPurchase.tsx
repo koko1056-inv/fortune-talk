@@ -5,7 +5,6 @@ import { Badge } from '@/components/ui/badge';
 import { Ticket, Sparkles, Star, Zap, Crown, MessageCircle, Mic } from 'lucide-react';
 import { TICKET_PACKAGES } from '@/hooks/useBillingStatus';
 import { useInAppPurchase } from '@/hooks/useInAppPurchase';
-import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 interface TicketPurchaseProps {
@@ -34,7 +33,7 @@ const packageGlows = [
 ];
 
 export const TicketPurchase = ({ currentBalance, onPurchaseRequest }: TicketPurchaseProps) => {
-  const { packages, purchasePackage, loading, isReady } = useInAppPurchase();
+  const { packages, purchaseByIndex, loading, isReady } = useInAppPurchase();
   const [selectedPackageIndex, setSelectedPackageIndex] = useState<number | null>(null);
   const [hoveredPackage, setHoveredPackage] = useState<number | null>(null);
 
@@ -47,33 +46,7 @@ export const TicketPurchase = ({ currentBalance, onPurchaseRequest }: TicketPurc
       return;
     }
 
-    // Match IAP package by product identifier (not by index)
-    const productIds = [
-      'com.fortunetalk.app.ticket_01',
-      'com.fortunetalk.app.ticket_10',
-      'com.fortunetalk.app.ticket_50',
-      'com.fortunetalk.app.ticket_100',
-    ];
-    const shortIds = ['ticket_01', 'ticket_10', 'ticket_50', 'ticket_100'];
-    const targetProductId = productIds[index];
-    const targetShortId = shortIds[index];
-
-    console.log('[IAP] Purchase attempt:', { index, targetProductId, packagesCount: packages.length });
-    packages.forEach(p => console.log('[IAP] Available:', p.identifier, p.product.productIdentifier));
-
-    const pkg = packages.find(p =>
-      p.product.productIdentifier === targetProductId ||
-      p.product.productIdentifier === targetShortId ||
-      p.identifier === targetShortId ||
-      p.identifier === `package_${targetShortId}`
-    );
-    if (pkg) {
-      await purchasePackage(pkg);
-    } else if (packages.length === 0) {
-      toast.error('商品情報を読み込み中です。アプリを再起動して再試行してください。');
-    } else {
-      toast.error(`商品が見つかりません (${targetProductId})`);
-    }
+    await purchaseByIndex(index);
   };
 
   return (

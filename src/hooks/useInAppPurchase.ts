@@ -1,14 +1,21 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { Purchases, PurchasesPackage, CustomerInfo, LOG_LEVEL } from '@revenuecat/purchases-capacitor';
 import { Capacitor } from '@capacitor/core';
 import { toast } from 'sonner';
 import { useAuth } from './useAuth';
 
-// TODO: Replace with your actual RevenueCat API Keys
 const API_KEYS = {
-    ios: "sk_dpiSIvxUZEEXFmwgKVlJHXlkPHgvo", // RevenueCatで取得したiOS用APIキー
-    android: "goog_YOUR_ANDROID_API_KEY_HERE", // Androidも対応する場合
+    ios: "sk_dpiSIvxUZEEXFmwgKVlJHXlkPHgvo",
+    android: "goog_YOUR_ANDROID_API_KEY_HERE",
 };
+
+// Full App Store product identifiers (in order: 1, 10, 50, 100 tickets)
+const PRODUCT_IDS = [
+    'com.fortunetalk.app.ticket_01',
+    'com.fortunetalk.app.ticket_10',
+    'com.fortunetalk.app.ticket_50',
+    'com.fortunetalk.app.ticket_100',
+];
 
 export const useInAppPurchase = () => {
     const { user } = useAuth();
@@ -19,9 +26,8 @@ export const useInAppPurchase = () => {
 
     useEffect(() => {
         const init = async () => {
-            // Only run on native platforms
             if (!Capacitor.isNativePlatform()) {
-                console.log("Not a native platform, skipping IAP init");
+                console.log("[IAP] Not native, skipping init");
                 return;
             }
 
@@ -34,10 +40,9 @@ export const useInAppPurchase = () => {
 
                 await Purchases.setLogLevel({ level: LOG_LEVEL.DEBUG });
 
-                // Set user ID so RevenueCat webhook can identify the Supabase user
                 if (user?.id) {
                     await Purchases.logIn({ appUserID: user.id });
-                    console.log("RevenueCat user ID set to:", user.id);
+                    console.log("[IAP] Logged in as:", user.id);
                 }
 
                 const info = await Purchases.getCustomerInfo();
@@ -46,7 +51,8 @@ export const useInAppPurchase = () => {
                 await loadOfferings();
                 setIsReady(true);
             } catch (error) {
-                console.error("Failed to init IAP:", error);
+                console.error("[IAP] Init failed:", error);
+                setIsReady(true); // still set ready so UI shows
             }
         };
 
@@ -56,10 +62,10 @@ export const useInAppPurchase = () => {
     const loadOfferings = async () => {
         try {
             const offerings = await Purchases.getOfferings();
-            console.log("[IAP] getOfferings result:", JSON.stringify({
+            console.log("[IAP] getOfferings:", JSON.stringify({
                 current: offerings.current?.identifier ?? null,
                 allKeys: Object.keys(offerings.all ?? {}),
-                currentPackages: offerings.current?.availablePackages?.map(p => ({
+                packages: offerings.current?.availablePackages?.map(p => ({
                     id: p.identifier,
                     productId: p.product.productIdentifier,
                     price: p.product.priceString,
@@ -68,20 +74,90 @@ export const useInAppPurchase = () => {
 
             if (offerings.current && offerings.current.availablePackages.length > 0) {
                 setPackages(offerings.current.availablePackages);
-                console.log("[IAP] Packages loaded:", offerings.current.availablePackages.length);
-            } else {
-                // Fallback: try first available offering
-                const allOfferings = Object.values(offerings.all ?? {});
-                const firstWithPackages = allOfferings.find(o => o.availablePackages.length > 0);
-                if (firstWithPackages) {
-                    console.log("[IAP] Fallback to offering:", firstWithPackages.identifier);
-                    setPackages(firstWithPackages.availablePackages);
-                } else {
-                    console.warn("[IAP] No offerings with packages found");
-                }
+                console.log("[IAP] Loaded", offerings.current.availablePackages.length, "packages from current offering");
+                return;
             }
+
+            // Try any offering
+            const allOfferings = Object.values(offerings.all ?? {});
+            const firstWithPackages = allOfferings.find(o => o.availablePackages.length > 0);
+            if (firstWithPackages) {
+                console.log("[IAP] Fallback offering:", firstWithPackages.identifier);
+                setPackages(firstWithPackages.availablePackages);
+                return;
+            }
+
+            console.warn("[IAP] No packages from offerings — will use direct getProducts fallback");
         } catch (error) {
-            console.error("[IAP] Failed to load offerings:", error);
+            console.error("[IAP] getOfferings failed:", error);
+        }
+    };
+
+    /**
+     * Purchase by index (0=ticket_01, 1=ticket_10, 2=ticket_50, 3=ticket_100)
+     * Tries offerings first, then falls back to direct StoreKit product purchase.
+     */
+    const purchaseByIndex = async (index: number): Promise<boolean> => {
+        if (!Capacitor.isNativePlatform()) {
+            toast.error("Web版ではアプリ内課金を利用できません");
+            return false;
+        }
+
+        setLoading(true);
+        try {
+            const targetProductId = PRODUCT_IDS[index];
+            const shortId = targetProductId.split('.').pop() ?? '';
+
+            // Try packages first
+            const pkg = packages.find(p =>
+                p.product.productIdentifier === targetProductId ||
+                p.product.productIdentifier === shortId ||
+                p.identifier === shortId ||
+                p.identifier === `package_${shortId}`
+            );
+
+            if (pkg) {
+                console.log("[IAP] Purchasing via package:", pkg.identifier);
+                const result = await Purchases.purchasePackage({ aPackage: pkg });
+                setCustomerInfo(result.customerInfo);
+                toast.success("購入が完了しました");
+                return true;
+            }
+
+            // Fallback: direct StoreKit product purchase
+            console.log("[IAP] No matching package, trying getProducts for:", targetProductId);
+            const { products } = await Purchases.getProducts({ productIdentifiers: [targetProductId] });
+            console.log("[IAP] getProducts result:", products.map(p => ({ id: p.productIdentifier, price: p.priceString })));
+
+            if (products.length > 0) {
+                const result = await Purchases.purchaseStoreProduct({ product: products[0] });
+                setCustomerInfo(result.customerInfo);
+                toast.success("購入が完了しました");
+                return true;
+            }
+
+            // Last resort: try with short ID
+            console.log("[IAP] Trying short ID:", shortId);
+            const { products: shortProducts } = await Purchases.getProducts({ productIdentifiers: [shortId] });
+            if (shortProducts.length > 0) {
+                const result = await Purchases.purchaseStoreProduct({ product: shortProducts[0] });
+                setCustomerInfo(result.customerInfo);
+                toast.success("購入が完了しました");
+                return true;
+            }
+
+            toast.error("商品が見つかりません。しばらく待ってから再試行してください。");
+            return false;
+
+        } catch (error: any) {
+            if (error.userCancelled) {
+                return false;
+            }
+            console.error("[IAP] Purchase failed:", error);
+            toast.error("購入に失敗しました: " + (error.message ?? ''));
+            return false;
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -90,7 +166,6 @@ export const useInAppPurchase = () => {
             toast.error("Web版ではアプリ内課金を利用できません");
             return false;
         }
-
         setLoading(true);
         try {
             const { customerInfo } = await Purchases.purchasePackage({ aPackage: pkg });
@@ -98,10 +173,8 @@ export const useInAppPurchase = () => {
             toast.success("購入が完了しました");
             return true;
         } catch (error: any) {
-            if (error.userCancelled) {
-                // User cancelled, do nothing
-            } else {
-                console.error("Purchase failed:", error);
+            if (!error.userCancelled) {
+                console.error("[IAP] purchasePackage failed:", error);
                 toast.error("購入に失敗しました");
             }
             return false;
@@ -117,7 +190,7 @@ export const useInAppPurchase = () => {
             setCustomerInfo(info.customerInfo);
             toast.success("購入を復元しました");
         } catch (error) {
-            console.error("Restore failed:", error);
+            console.error("[IAP] Restore failed:", error);
             toast.error("復元に失敗しました");
         } finally {
             setLoading(false);
@@ -128,6 +201,7 @@ export const useInAppPurchase = () => {
         isReady,
         packages,
         customerInfo,
+        purchaseByIndex,
         purchasePackage,
         restorePurchases,
         loading
