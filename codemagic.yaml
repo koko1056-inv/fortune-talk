@@ -1,16 +1,20 @@
 workflows:
   ios-workflow:
-    name: iOS Build
+    name: iOS Build → TestFlight
     max_build_duration: 60
     instance_type: mac_mini_m2
     
     environment:
+      groups:
+        - app_store_connect
       ios_signing:
         distribution_type: app_store
-        bundle_identifier: app.lovable.3db97fc556014d84aad955ea93033313
+        bundle_identifier: com.fortunetalk.app
       vars:
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
+        APP_STORE_CONNECT_KEY_IDENTIFIER: "7PY5UXRT74"
+        APP_STORE_CONNECT_ISSUER_ID: "9c77cc55-b832-447a-9f47-45742df69211"
       node: 18
       xcode: latest
       cocoapods: default
@@ -49,6 +53,8 @@ workflows:
     
     publishing:
       app_store_connect:
-        auth: integration
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
         submit_to_testflight: true
         submit_to_app_store: false
