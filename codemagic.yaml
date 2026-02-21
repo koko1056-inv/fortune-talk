@@ -14,7 +14,7 @@ workflows:
         APP_STORE_CONNECT_KEY_IDENTIFIER: "7PY5UXRT74"
         APP_STORE_CONNECT_ISSUER_ID: "9c77cc55-b832-447a-9f47-45742df69211"
       node: 18
-      xcode: 16.2
+      xcode: latest
       cocoapods: default
     
     scripts:
@@ -26,9 +26,13 @@ workflows:
         script: |
           npm run build
 
+      - name: Fix pbxproj objectVersion for CocoaPods
+        script: |
+          find . -name "project.pbxproj" -exec sed -i '' 's/objectVersion = 70/objectVersion = 60/g' {} \;
+          echo "objectVersion fixed ✅"
+
       - name: Sync Capacitor
         script: |
-          gem update xcodeproj
           npx cap sync ios
 
       - name: Install CocoaPods dependencies
