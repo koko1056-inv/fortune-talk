@@ -45,7 +45,13 @@ workflows:
 
       - name: Fetch signing files
         script: |
-          echo "$CERTIFICATE_PRIVATE_KEY" | base64 --decode > /tmp/dist_key.pem
+          python3 -c "
+import base64, os, sys
+key = os.environ.get('CERTIFICATE_PRIVATE_KEY', '')
+decoded = base64.b64decode(key)
+sys.stdout.buffer.write(decoded)
+" > /tmp/dist_key.pem
+          echo "PEM header: $(head -1 /tmp/dist_key.pem)"
           app-store-connect fetch-signing-files \
             "$BUNDLE_ID" \
             --type IOS_APP_STORE \
