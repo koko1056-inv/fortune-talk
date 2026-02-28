@@ -67,7 +67,7 @@ export const useInAppPurchase = () => {
                 allKeys: Object.keys(offerings.all ?? {}),
                 packages: offerings.current?.availablePackages?.map(p => ({
                     id: p.identifier,
-                    productId: p.product.productIdentifier,
+                    productId: (p.product as any).productIdentifier ?? p.product.identifier,
                     price: p.product.priceString,
                 })) ?? [],
             }));
@@ -110,8 +110,8 @@ export const useInAppPurchase = () => {
 
             // Try packages first
             const pkg = packages.find(p =>
-                p.product.productIdentifier === targetProductId ||
-                p.product.productIdentifier === shortId ||
+                ((p.product as any).productIdentifier ?? p.product.identifier) === targetProductId ||
+                ((p.product as any).productIdentifier ?? p.product.identifier) === shortId ||
                 p.identifier === shortId ||
                 p.identifier === `package_${shortId}`
             );
@@ -127,7 +127,7 @@ export const useInAppPurchase = () => {
             // Fallback: direct StoreKit product purchase
             console.log("[IAP] No matching package, trying getProducts for:", targetProductId);
             const { products } = await Purchases.getProducts({ productIdentifiers: [targetProductId] });
-            console.log("[IAP] getProducts result:", products.map(p => ({ id: p.productIdentifier, price: p.priceString })));
+            console.log("[IAP] getProducts result:", products.map(p => ({ id: (p as any).productIdentifier ?? p.identifier, price: p.priceString })));
 
             if (products.length > 0) {
                 const result = await Purchases.purchaseStoreProduct({ product: products[0] });
