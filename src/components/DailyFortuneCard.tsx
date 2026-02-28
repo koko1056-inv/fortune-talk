@@ -76,36 +76,31 @@ export const DailyFortuneCard = () => {
 
   return (
     <>
-      {/* Trigger Card */}
-      <Card
+      {/* Trigger Button - styled like 占いを始める */}
+      <button
         onClick={handleOpen}
         className={cn(
-          'w-full max-w-md cursor-pointer transition-all duration-300',
-          'bg-gradient-to-br from-card/60 via-card/40 to-primary/5',
-          'backdrop-blur-sm border-border/30',
-          'hover:border-accent/40 hover:shadow-[0_0_30px_hsl(45_80%_55%/0.2)]',
-          'hover:scale-[1.02] active:scale-[0.98]'
+          'relative z-10 flex items-center justify-center gap-2 md:gap-3',
+          'px-8 py-4 md:px-12 md:py-5 rounded-full',
+          'transition-all duration-500',
+          'focus:outline-none focus-visible:ring-4 focus-visible:ring-accent/50',
+          'border border-accent/30',
+          'hover:scale-105 active:scale-95 cursor-pointer',
+          'animate-pulse-subtle'
         )}
+        style={{
+          background: 'linear-gradient(135deg, hsl(280 50% 25% / 0.8), hsl(260 40% 20% / 0.9))',
+          boxShadow: '0 0 40px hsl(280 60% 50% / 0.3), inset 0 1px 0 hsl(280 50% 60% / 0.2), 0 10px 30px -10px hsl(260 50% 5% / 0.5)',
+        }}
       >
-        <CardContent className="flex items-center justify-center gap-3 py-5">
-          <div className="relative">
-            <div className="absolute inset-0 blur-md bg-accent/30 rounded-full animate-pulse" />
-            <Sparkles className="w-5 h-5 text-accent relative z-10" />
-          </div>
-          <span className="text-base font-medium text-foreground/90">今日の運勢</span>
-          <div className="flex gap-0.5 ml-2">
-            {[1, 2, 3].map((i) => (
-              <span
-                key={i}
-                className="text-accent/60 animate-twinkle"
-                style={{ animationDelay: `${i * 0.2}s` }}
-              >
-                ✧
-              </span>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+        <div className="relative">
+          <div className="absolute inset-0 blur-md bg-accent/30 rounded-full animate-pulse" />
+          <Sparkles className="w-5 h-5 text-accent relative z-10" />
+        </div>
+        <span className="font-display font-semibold tracking-wider text-sm md:text-base text-foreground">
+          今日の運勢
+        </span>
+      </button>
 
       {/* Omikuji Dialog */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
