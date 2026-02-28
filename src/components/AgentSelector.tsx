@@ -87,7 +87,7 @@ const AgentSelector = ({
   return <div className="w-full flex flex-col items-center">
 
       {/* Carousel with swipe support */}
-      <div ref={containerRef} className="relative w-full h-48 md:h-64 flex items-center justify-center touch-pan-y select-none" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+      <div ref={containerRef} className="relative w-full h-56 md:h-72 flex items-center justify-center touch-pan-y select-none" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
         {/* Navigation arrows */}
         <button onClick={() => navigateTo('prev')} disabled={disabled} className="absolute left-2 md:left-4 z-20 p-1.5 md:p-2 rounded-full bg-card/80 backdrop-blur-sm border border-border/50 text-muted-foreground hover:text-foreground hover:bg-card transition-all shadow-sm disabled:opacity-50">
           <ChevronLeft className="w-4 h-4 md:w-5 md:h-5" />
@@ -119,7 +119,7 @@ const AgentSelector = ({
             zIndex
           }}>
                 {/* Sphere */}
-                <div className={cn("relative rounded-full flex items-center justify-center shadow-2xl transition-all duration-500 overflow-hidden", !agent.imageUrl && "bg-gradient-to-br", !agent.imageUrl && agent.gradient, isSelected ? "w-32 h-32 md:w-32 lg:w-40 md:h-32 lg:h-40" : "w-12 h-12 md:w-20 md:h-20")} style={{
+                <div className={cn("relative rounded-full flex items-center justify-center shadow-2xl transition-all duration-500 overflow-hidden", !agent.imageUrl && "bg-gradient-to-br", !agent.imageUrl && agent.gradient, isSelected ? "w-40 h-40 md:w-44 lg:w-48 md:h-44 lg:h-48" : "w-14 h-14 md:w-20 md:h-20")} style={{
               boxShadow: isSelected ? `0 20px 60px -15px rgba(0,0,0,0.3), inset 0 -10px 30px rgba(0,0,0,0.2), inset 0 10px 30px rgba(255,255,255,0.2)` : `0 10px 30px -10px rgba(0,0,0,0.2), inset 0 -5px 15px rgba(0,0,0,0.15), inset 0 5px 15px rgba(255,255,255,0.15)`
             }}>
                   {agent.imageUrl ? <img src={agent.imageUrl} alt={agent.name} className="w-full h-full object-cover" /> : <>

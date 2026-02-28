@@ -128,7 +128,7 @@ const Index = () => {
               ✧ Fortune Talk ✧
             </p>
 
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold tracking-wide text-foreground">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-display font-bold tracking-wide text-foreground">
               <span className="text-gradient drop-shadow-[0_0_30px_hsl(45_80%_55%/0.5)]">フォーチュントーク</span>
             </h1>
 
@@ -148,12 +148,7 @@ const Index = () => {
           </header>
         )}
 
-        {/* Daily Fortune Card - hidden during session */}
-        {!isInSession && (
-          <div className="w-full mb-6 md:mb-8 flex justify-center">
-            <DailyFortuneCard />
-          </div>
-        )}
+        {/* Daily Fortune Card moved below chat interface */}
 
         {/* Chat Interface - ALWAYS mounted, never unmounted */}
         <main ref={chatRef} className={`w-full ${isInSession ? "max-w-xl" : ""}`}>
@@ -163,6 +158,13 @@ const Index = () => {
             <TextChat onSessionChange={handleSessionChange} />
           )}
         </main>
+
+        {/* Daily Fortune Card - below chat, hidden during session */}
+        {!isInSession && (
+          <div className="w-full mt-6 md:mt-8 flex justify-center">
+            <DailyFortuneCard />
+          </div>
+        )}
 
         {/* Mode Toggle - hidden during session */}
         {!isInSession && (
