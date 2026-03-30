@@ -29,8 +29,16 @@ const Index = () => {
   const [isInSession, setIsInSession] = useState(false);
   const chatRef = useRef<HTMLDivElement>(null);
   const {
-    profile
+    profile,
+    loading: profileLoading
   } = useProfile();
+
+  // Redirect to onboarding if not completed
+  useEffect(() => {
+    if (user && !profileLoading && profile && !profile.onboarding_completed) {
+      navigate("/onboarding");
+    }
+  }, [user, profile, profileLoading, navigate]);
 
   const handleNavigate = (path: string) => {
     console.log(`Navigating to: ${path}`);

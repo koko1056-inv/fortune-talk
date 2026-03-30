@@ -11,6 +11,11 @@ export interface Profile {
   zodiac_sign: string | null;
   blood_type: string | null;
   tutorial_completed: boolean | null;
+  birth_time: string | null;
+  birth_location: string | null;
+  guidance_topics: string[] | null;
+  onboarding_completed: boolean;
+  personality_summary: string | null;
   created_at: string;
   updated_at: string;
 }

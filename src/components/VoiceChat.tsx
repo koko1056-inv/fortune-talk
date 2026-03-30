@@ -17,6 +17,9 @@ import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
 import { useFortuneHistory } from "@/hooks/useFortuneHistory";
 import { useBillingStatus } from "@/hooks/useBillingStatus";
+import { useSubscription } from "@/hooks/useSubscription";
+import { usePaywall } from "@/hooks/usePaywall";
+import PaywallScreen from "@/components/paywall/PaywallScreen";
 import { supabase } from "@/integrations/supabase/client";
 
 const MAX_SECONDS_PER_TICKET = 180; // 3 minutes per ticket
@@ -32,6 +35,8 @@ const VoiceChat = ({ onSessionChange }: VoiceChatProps) => {
   const { profile } = useProfile();
   const { saveReading } = useFortuneHistory();
   const { billingStatus, isFirstFreeReading, useTicket, refetch: refetchBilling } = useBillingStatus();
+  const { isPremium } = useSubscription();
+  const { showPaywall, triggerPaywall, closePaywall } = usePaywall();
   const [isConnecting, setIsConnecting] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [showTicketDialog, setShowTicketDialog] = useState(false);
@@ -87,6 +92,15 @@ const VoiceChat = ({ onSessionChange }: VoiceChatProps) => {
     }
     if (profile.zodiac_sign) parts.push(`星座: ${profile.zodiac_sign}`);
     if (profile.blood_type) parts.push(`血液型: ${profile.blood_type}型`);
+    const extProfile = profile as any;
+    if (extProfile.birth_time && extProfile.birth_time !== "不明") parts.push(`出生時間: ${extProfile.birth_time}`);
+    if (extProfile.birth_location && extProfile.birth_location !== "不明") parts.push(`出生地: ${extProfile.birth_location}`);
+    if (extProfile.guidance_topics?.length) {
+      const topicLabels: Record<string, string> = {
+        love: "恋愛", career: "仕事", self: "自己理解", health: "健康", future: "未来", money: "金運",
+      };
+      parts.push(`関心分野: ${extProfile.guidance_topics.map((t: string) => topicLabels[t] || t).join("、")}`);
+    }
 
     if (parts.length === 0) return null;
     return `【相談者のプロフィール情報】\n${parts.join('\n')}\n\nこの情報を参考にして、パーソナライズされた占いを提供してください。`;
@@ -115,13 +129,13 @@ const VoiceChat = ({ onSessionChange }: VoiceChatProps) => {
 
   const [isConnected, setIsConnectedState] = useState(false);
 
-  // Check if time limit reached
+  // Check if time limit reached (premium users have no limit)
   useEffect(() => {
-    if (!billingStatus.isExempt && elapsedSeconds >= MAX_SECONDS_PER_TICKET && isConnected) {
+    if (!isPremium && !billingStatus.isExempt && elapsedSeconds >= MAX_SECONDS_PER_TICKET && isConnected) {
       setShowTicketDialog(true);
       stopTimer();
     }
-  }, [elapsedSeconds, billingStatus.isExempt, isConnected, stopTimer]);
+  }, [elapsedSeconds, isPremium, billingStatus.isExempt, isConnected, stopTimer]);
 
   const conversation = useConversation({
     onConnect: () => {
@@ -256,6 +270,13 @@ const VoiceChat = ({ onSessionChange }: VoiceChatProps) => {
   }, [conversation, selectedAgent, buildDynamicPrompt, profile]);
 
   const startConversation = useCallback(async () => {
+    // Premium subscribers get unlimited access
+    if (isPremium) {
+      isFreeReadingRef.current = false;
+      await startConversationInternal();
+      return;
+    }
+
     if (billingStatus.isExempt) {
       isFreeReadingRef.current = false;
       await startConversationInternal();
@@ -285,8 +306,11 @@ const VoiceChat = ({ onSessionChange }: VoiceChatProps) => {
       return;
     }
 
+    // Show paywall instead of ticket dialog for users without tickets
+    if (triggerPaywall()) return;
+
     setShowTicketDialog(true);
-  }, [billingStatus, isFirstFreeReading, useTicket, startConversationInternal]);
+  }, [isPremium, billingStatus, isFirstFreeReading, useTicket, startConversationInternal, triggerPaywall]);
 
   const stopConversation = useCallback(async () => {
     await conversation.endSession();
@@ -449,6 +473,16 @@ const VoiceChat = ({ onSessionChange }: VoiceChatProps) => {
         onEnd={stopConversation}
       />
       </div>
+
+      {/* Paywall */}
+      <PaywallScreen
+        open={showPaywall}
+        onClose={closePaywall}
+        onSubscribe={(plan) => {
+          closePaywall();
+          navigate("/tickets");
+        }}
+      />
     </>
   );
 };

@@ -276,13 +276,45 @@ export type Database = {
         }
         Relationships: []
       }
+      onboarding_readings: {
+        Row: {
+          id: string
+          user_id: string
+          birth_chart_data: Json | null
+          personality_traits: string[] | null
+          summary_text: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          birth_chart_data?: Json | null
+          personality_traits?: string[] | null
+          summary_text: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          birth_chart_data?: Json | null
+          personality_traits?: string[] | null
+          summary_text?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           birth_date: string | null
+          birth_time: string | null
+          birth_location: string | null
           blood_type: string | null
           created_at: string
           display_name: string | null
+          guidance_topics: string[] | null
           id: string
+          onboarding_completed: boolean
+          personality_summary: string | null
           tutorial_completed: boolean | null
           updated_at: string
           user_id: string
@@ -290,10 +322,15 @@ export type Database = {
         }
         Insert: {
           birth_date?: string | null
+          birth_time?: string | null
+          birth_location?: string | null
           blood_type?: string | null
           created_at?: string
           display_name?: string | null
+          guidance_topics?: string[] | null
           id?: string
+          onboarding_completed?: boolean
+          personality_summary?: string | null
           tutorial_completed?: boolean | null
           updated_at?: string
           user_id: string
@@ -301,14 +338,64 @@ export type Database = {
         }
         Update: {
           birth_date?: string | null
+          birth_time?: string | null
+          birth_location?: string | null
           blood_type?: string | null
           created_at?: string
           display_name?: string | null
+          guidance_topics?: string[] | null
           id?: string
+          onboarding_completed?: boolean
+          personality_summary?: string | null
           tutorial_completed?: boolean | null
           updated_at?: string
           user_id?: string
           zodiac_sign?: string | null
+        }
+        Relationships: []
+      }
+      user_subscriptions: {
+        Row: {
+          id: string
+          user_id: string
+          plan_type: string
+          status: string
+          trial_start: string | null
+          trial_end: string | null
+          current_period_start: string | null
+          current_period_end: string | null
+          revenuecat_subscription_id: string | null
+          product_id: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          plan_type?: string
+          status?: string
+          trial_start?: string | null
+          trial_end?: string | null
+          current_period_start?: string | null
+          current_period_end?: string | null
+          revenuecat_subscription_id?: string | null
+          product_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          plan_type?: string
+          status?: string
+          trial_start?: string | null
+          trial_end?: string | null
+          current_period_start?: string | null
+          current_period_end?: string | null
+          revenuecat_subscription_id?: string | null
+          product_id?: string | null
+          created_at?: string
+          updated_at?: string
         }
         Relationships: []
       }

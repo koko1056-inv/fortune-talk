@@ -12,6 +12,7 @@ import History from "./pages/History";
 import Tickets from "./pages/Tickets";
 import ChatHistory from "./pages/ChatHistory";
 import CommercialTransaction from "./pages/CommercialTransaction";
+import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,6 +26,7 @@ const AppContent = () => {
   return (
     <Routes>
       <Route path="/" element={<Index />} />
+      <Route path="/onboarding" element={<Onboarding />} />
       <Route path="/auth" element={<Auth />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/history" element={<History />} />
