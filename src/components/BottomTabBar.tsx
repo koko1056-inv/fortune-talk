@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { Sparkles, ScrollText, MessageSquare, Ticket, User } from "lucide-react";
+import { ScrollText, MessageSquare, Ticket, User, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -10,10 +10,12 @@ interface TabItem {
   icon: typeof Sparkles;
 }
 
-const tabs: TabItem[] = [
-  { path: "/", label: "ホーム", icon: Sparkles },
+const leftTabs: TabItem[] = [
   { path: "/history", label: "履歴", icon: ScrollText },
   { path: "/chat-history", label: "チャット", icon: MessageSquare },
+];
+
+const rightTabs: TabItem[] = [
   { path: "/tickets", label: "プラン", icon: Ticket },
   { path: "/profile", label: "マイページ", icon: User },
 ];
@@ -49,55 +51,104 @@ const BottomTabBar = () => {
 
   if (shouldHide) return null;
 
+  const isHomeActive = currentPath === "/";
+
+  const renderTab = (tab: TabItem) => {
+    const isActive = currentPath === tab.path;
+    const Icon = tab.icon;
+
+    return (
+      <button
+        key={tab.path}
+        onClick={() => navigate(tab.path)}
+        className={cn(
+          "flex-1 flex flex-col items-center justify-center gap-0.5 py-2 pt-2.5 transition-colors duration-200",
+          "active:scale-95 active:opacity-80",
+          isActive
+            ? "text-accent"
+            : "text-muted-foreground/50 hover:text-muted-foreground/80"
+        )}
+        aria-label={tab.label}
+        aria-current={isActive ? "page" : undefined}
+      >
+        <div className="relative">
+          <Icon
+            className={cn(
+              "w-[22px] h-[22px] transition-all duration-200",
+              isActive && "drop-shadow-[0_0_6px_hsl(45_80%_55%/0.5)]"
+            )}
+            strokeWidth={isActive ? 2.2 : 1.8}
+          />
+          {isActive && (
+            <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-accent" />
+          )}
+        </div>
+        <span
+          className={cn(
+            "text-[10px] leading-tight transition-colors duration-200",
+            isActive ? "font-medium" : "font-normal"
+          )}
+        >
+          {tab.label}
+        </span>
+      </button>
+    );
+  };
+
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 z-40"
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
       <div className="glass-elevated border-t border-white/[0.06] shadow-[0_-4px_20px_rgba(0,0,0,0.3)]">
-        <div className="flex items-stretch justify-around max-w-lg mx-auto">
-          {tabs.map((tab) => {
-            const isActive = currentPath === tab.path;
-            const Icon = tab.icon;
+        <div className="flex items-end justify-around max-w-lg mx-auto relative">
+          {/* Left tabs */}
+          {leftTabs.map(renderTab)}
 
-            return (
-              <button
-                key={tab.path}
-                onClick={() => navigate(tab.path)}
+          {/* Center fortune button — raised */}
+          <div className="flex flex-col items-center -mt-5 px-1">
+            <button
+              onClick={() => navigate("/")}
+              className={cn(
+                "relative w-[56px] h-[56px] rounded-full flex items-center justify-center",
+                "transition-all duration-300 active:scale-90",
+                isHomeActive
+                  ? "bg-gradient-to-br from-accent via-amber-500 to-accent shadow-[0_0_24px_hsl(45_80%_55%/0.5)]"
+                  : "bg-gradient-to-br from-primary via-purple-600 to-primary/80 shadow-[0_4px_20px_hsl(280_70%_50%/0.4)]"
+              )}
+              aria-label="占い"
+              aria-current={isHomeActive ? "page" : undefined}
+            >
+              {/* Glow ring */}
+              <div
                 className={cn(
-                  "flex-1 flex flex-col items-center justify-center gap-0.5 py-2 pt-2.5 transition-colors duration-200",
-                  "active:scale-95 active:opacity-80",
-                  isActive
-                    ? "text-accent"
-                    : "text-muted-foreground/50 hover:text-muted-foreground/80"
+                  "absolute inset-0 rounded-full transition-opacity duration-300",
+                  isHomeActive ? "opacity-100" : "opacity-0"
                 )}
-                aria-label={tab.label}
-                aria-current={isActive ? "page" : undefined}
-              >
-                <div className="relative">
-                  <Icon
-                    className={cn(
-                      "w-[22px] h-[22px] transition-all duration-200",
-                      isActive && "drop-shadow-[0_0_6px_hsl(45_80%_55%/0.5)]"
-                    )}
-                    strokeWidth={isActive ? 2.2 : 1.8}
-                  />
-                  {/* Active indicator dot */}
-                  {isActive && (
-                    <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-accent" />
-                  )}
-                </div>
-                <span
-                  className={cn(
-                    "text-[10px] leading-tight transition-colors duration-200",
-                    isActive ? "font-medium" : "font-normal"
-                  )}
-                >
-                  {tab.label}
-                </span>
-              </button>
-            );
-          })}
+                style={{
+                  boxShadow: "0 0 20px hsl(45 80% 55% / 0.4), inset 0 0 12px hsl(45 80% 80% / 0.2)",
+                }}
+              />
+              <Sparkles
+                className={cn(
+                  "w-7 h-7 relative z-10 transition-all duration-200",
+                  isHomeActive ? "text-accent-foreground" : "text-primary-foreground"
+                )}
+                strokeWidth={2}
+              />
+            </button>
+            <span
+              className={cn(
+                "text-[10px] leading-tight mt-1 transition-colors duration-200",
+                isHomeActive ? "text-accent font-medium" : "text-muted-foreground/50"
+              )}
+            >
+              占い
+            </span>
+          </div>
+
+          {/* Right tabs */}
+          {rightTabs.map(renderTab)}
         </div>
       </div>
     </nav>
