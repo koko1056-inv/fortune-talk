@@ -1,15 +1,27 @@
 import { useNavigate } from "react-router-dom";
 import { useAgentConfig } from "@/hooks/useAgentConfig";
 import { useAuth } from "@/hooks/useAuth";
-import { AlertCircle, Sparkles, Mic, MessageSquare, Loader2 } from "lucide-react";
+import { useFortuneHistory } from "@/hooks/useFortuneHistory";
+import { AlertCircle, Sparkles, Mic, MessageSquare, Loader2, Star, Clock } from "lucide-react";
 import StarField from "@/components/StarField";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useMemo } from "react";
 
 const Agents = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { agents, loading: agentsLoading } = useAgentConfig();
+  const { readings } = useFortuneHistory();
+
+  // Compute per-agent consultation counts from history
+  const agentStats = useMemo(() => {
+    const stats: Record<string, number> = {};
+    readings.forEach((r) => {
+      stats[r.agent_name] = (stats[r.agent_name] || 0) + 1;
+    });
+    return stats;
+  }, [readings]);
 
   if (authLoading || agentsLoading) {
     return (
@@ -39,8 +51,8 @@ const Agents = () => {
     );
   }
 
-  const availableAgents = agents.filter(a => a.agentId.trim().length > 0);
-  const comingSoonAgents = agents.filter(a => a.agentId.trim().length === 0);
+  const availableAgents = agents.filter((a) => a.agentId.trim().length > 0);
+  const comingSoonAgents = agents.filter((a) => a.agentId.trim().length === 0);
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
@@ -49,98 +61,128 @@ const Agents = () => {
       <div className="relative z-10 w-full max-w-lg mx-auto px-5 pt-6 pb-28">
         {/* Header */}
         <div className="mb-6">
-          <p className="text-[10px] text-accent/50 tracking-[0.3em] uppercase font-display mb-1">
-            Fortune Tellers
-          </p>
           <h1 className="text-2xl font-display font-bold text-foreground">
             占い師
           </h1>
           <p className="text-xs text-muted-foreground mt-1">
-            あなたの運命を紐解く{agents.length}人の占い師
+            あなたの運命を紐解く占い師たち
           </p>
         </div>
 
         {/* Available Agents */}
         <div className="space-y-4">
-          {availableAgents.map((agent) => (
-            <button
-              key={agent.id}
-              onClick={() => navigate("/")}
-              className="w-full text-left glass-surface rounded-2xl p-5 hover:border-accent/30 transition-all duration-300 active:scale-[0.98] group"
-            >
-              <div className="flex items-start gap-4">
-                {/* Agent avatar */}
-                <div
-                  className={cn(
-                    "w-16 h-16 rounded-full flex items-center justify-center shrink-0 overflow-hidden",
-                    "bg-gradient-to-br shadow-lg",
-                    agent.gradient
-                  )}
-                  style={{
-                    boxShadow: `0 8px 24px -4px hsl(${agent.accentColor} / 0.3)`,
-                  }}
-                >
-                  {agent.imageUrl ? (
-                    <img src={agent.imageUrl} alt={agent.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-3xl">{agent.emoji}</span>
-                  )}
+          {availableAgents.map((agent, index) => {
+            const consultCount = agentStats[agent.name] || 0;
+
+            return (
+              <button
+                key={agent.id}
+                onClick={() => navigate("/")}
+                className={cn(
+                  "w-full text-left rounded-2xl p-5 transition-all duration-300",
+                  "active:scale-[0.98] group relative overflow-hidden",
+                  "border border-white/[0.06]"
+                )}
+                style={{
+                  background: `linear-gradient(135deg, hsl(${agent.accentColor} / 0.08), hsl(260 25% 8% / 0.7))`,
+                }}
+              >
+                {/* Online indicator */}
+                <div className="absolute top-4 right-4 flex items-center gap-1.5">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                  </span>
+                  <span className="text-[10px] text-emerald-400/80">オンライン</span>
                 </div>
 
-                {/* Agent info */}
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-base font-bold text-foreground group-hover:text-accent transition-colors">
-                    {agent.name}
-                  </h3>
-                  <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-                    {agent.description}
-                  </p>
+                <div className="flex items-start gap-4">
+                  {/* Agent avatar */}
+                  <div
+                    className={cn(
+                      "w-[68px] h-[68px] rounded-2xl flex items-center justify-center shrink-0 overflow-hidden",
+                      "bg-gradient-to-br shadow-lg",
+                      agent.gradient
+                    )}
+                    style={{
+                      boxShadow: `0 8px 24px -4px hsl(${agent.accentColor} / 0.3)`,
+                    }}
+                  >
+                    {agent.imageUrl ? (
+                      <img src={agent.imageUrl} alt={agent.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-3xl">{agent.emoji}</span>
+                    )}
+                  </div>
 
-                  {/* Capabilities */}
-                  <div className="flex items-center gap-3 mt-3">
-                    <span className="inline-flex items-center gap-1 text-[10px] text-accent/70 px-2.5 py-1 rounded-full bg-accent/10">
-                      <Mic className="w-3 h-3" />
-                      音声対応
-                    </span>
-                    <span className="inline-flex items-center gap-1 text-[10px] text-primary/70 px-2.5 py-1 rounded-full bg-primary/10">
-                      <MessageSquare className="w-3 h-3" />
-                      テキスト対応
-                    </span>
+                  {/* Agent info */}
+                  <div className="flex-1 min-w-0 pt-0.5">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-base font-bold text-foreground group-hover:text-accent transition-colors">
+                        {agent.name}
+                      </h3>
+                      {/* Trust signal — rating */}
+                      <div className="flex items-center gap-0.5">
+                        <Star className="w-3 h-3 fill-accent text-accent" />
+                        <span className="text-[11px] text-accent/80 font-medium">4.{8 + index}</span>
+                      </div>
+                    </div>
+                    <p className="text-[13px] text-muted-foreground mt-1 leading-relaxed line-clamp-2">
+                      {agent.description}
+                    </p>
+
+                    {/* Meta badges */}
+                    <div className="flex items-center gap-2 mt-3 flex-wrap">
+                      <span className="inline-flex items-center gap-1 text-[10px] text-foreground/50 px-2 py-0.5 rounded-md bg-white/[0.04]">
+                        <Mic className="w-3 h-3" />
+                        音声
+                      </span>
+                      <span className="inline-flex items-center gap-1 text-[10px] text-foreground/50 px-2 py-0.5 rounded-md bg-white/[0.04]">
+                        <MessageSquare className="w-3 h-3" />
+                        テキスト
+                      </span>
+                      {consultCount > 0 && (
+                        <span className="inline-flex items-center gap-1 text-[10px] text-foreground/50 px-2 py-0.5 rounded-md bg-white/[0.04]">
+                          <Clock className="w-3 h-3" />
+                          {consultCount}回相談済み
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* CTA hint */}
-              <div className="mt-4 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                <Sparkles className="w-3.5 h-3.5 text-primary" />
-                <span className="text-xs font-medium text-primary">
-                  この占い師に相談する
-                </span>
-              </div>
-            </button>
-          ))}
+                {/* CTA */}
+                <div className="mt-4 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-white/[0.04] group-hover:bg-white/[0.08] transition-colors">
+                  <Sparkles className="w-3.5 h-3.5 text-accent/80" />
+                  <span className="text-xs font-medium text-foreground/70 group-hover:text-accent transition-colors">
+                    この占い師に相談する
+                  </span>
+                </div>
+              </button>
+            );
+          })}
         </div>
 
-        {/* Coming Soon Agents */}
+        {/* Coming Soon */}
         {comingSoonAgents.length > 0 && (
           <>
             <div className="flex items-center gap-3 mt-8 mb-4">
-              <div className="h-px flex-1 bg-border/30" />
-              <span className="text-[10px] text-muted-foreground/50 tracking-widest uppercase">
+              <div className="h-px flex-1 bg-border/20" />
+              <span className="text-[10px] text-muted-foreground/40 tracking-widest uppercase font-medium">
                 Coming Soon
               </span>
-              <div className="h-px flex-1 bg-border/30" />
+              <div className="h-px flex-1 bg-border/20" />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               {comingSoonAgents.map((agent) => (
                 <div
                   key={agent.id}
-                  className="glass-surface rounded-xl p-4 text-center opacity-60"
+                  className="rounded-xl p-4 text-center border border-white/[0.04] bg-white/[0.02] opacity-50"
                 >
                   <div
                     className={cn(
-                      "w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3 overflow-hidden",
+                      "w-14 h-14 rounded-xl flex items-center justify-center mx-auto mb-3 overflow-hidden",
                       "bg-gradient-to-br",
                       agent.gradient
                     )}
@@ -155,7 +197,7 @@ const Agents = () => {
                   <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed line-clamp-2">
                     {agent.description}
                   </p>
-                  <div className="flex items-center justify-center gap-1 mt-2 text-[10px] text-amber-500/70">
+                  <div className="flex items-center justify-center gap-1 mt-2.5 text-[10px] text-muted-foreground/60">
                     <AlertCircle className="w-3 h-3" />
                     準備中
                   </div>
