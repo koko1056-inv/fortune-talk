@@ -15,9 +15,12 @@ const SettingsLink = () => {
   const { isAdmin } = useIsAdmin();
   if (!isAdmin) return null;
   return (
-    <Link to="/settings" className="flex items-center gap-1 text-xs text-muted-foreground hover:text-accent transition-colors">
-      <Settings className="w-3 h-3" />
-      <span className="hidden sm:inline">設定</span>
+    <Link
+      to="/settings"
+      className="p-2 rounded-lg text-foreground/60 hover:text-accent hover:bg-white/5 transition-colors"
+      aria-label="設定"
+    >
+      <Settings className="w-4 h-4" />
     </Link>
   );
 };
@@ -78,36 +81,69 @@ const Index = () => {
       {/* Animated star field background */}
       <StarField />
 
-      {/* Auth/Profile button - hidden during session */}
+      {/* Top navigation bar - hidden during session */}
       {!isInSession && (
-        <div className="absolute top-20 right-4 md:top-6 md:right-6 z-30 flex items-center gap-2 md:gap-3">
-          {user && <button onClick={() => handleNavigate("/tickets")} className="flex items-center gap-1.5 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full glass-surface text-xs md:text-sm text-foreground/80 hover:text-accent transition-colors">
-            <Ticket className="w-3.5 h-3.5 md:w-4 md:h-4" />
-            <span className="hidden sm:inline">チケット</span>
-          </button>}
-          {user && <button onClick={() => handleNavigate("/chat-history")} className="flex items-center gap-1.5 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full glass-surface text-xs md:text-sm text-foreground/80 hover:text-accent transition-colors">
-            <MessageSquare className="w-3.5 h-3.5 md:w-4 md:h-4" />
-            <span className="hidden sm:inline">チャット履歴</span>
-          </button>}
-          {user && <button onClick={() => handleNavigate("/history")} className="flex items-center gap-1.5 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full glass-surface text-xs md:text-sm text-foreground/80 hover:text-accent transition-colors">
-            <ScrollText className="w-3.5 h-3.5 md:w-4 md:h-4" />
-            <span className="hidden sm:inline">トーク履歴</span>
-          </button>}
-          {user ? <button onClick={() => handleNavigate("/profile")} className="flex items-center gap-1.5 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full glass-surface text-xs md:text-sm text-foreground/80 hover:text-accent transition-colors">
-            <User className="w-3.5 h-3.5 md:w-4 md:h-4" />
-            <span className="hidden sm:inline">{profile?.display_name || "プロフィール"}</span>
-          </button> : <button onClick={() => handleNavigate("/auth")} className="flex items-center gap-1.5 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full glass-surface text-xs md:text-sm text-foreground/80 hover:text-accent transition-colors">
-            <LogIn className="w-3.5 h-3.5 md:w-4 md:h-4" />
-            <span>ログイン</span>
-          </button>}
-        </div>
+        <nav className="fixed top-0 left-0 right-0 z-30" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+          <div className="flex items-center justify-between px-4 py-2.5 bg-background/60 backdrop-blur-md border-b border-white/5">
+            {/* Left: App name */}
+            <span className="text-xs text-accent/70 tracking-[0.2em] uppercase font-display">
+              Fortune Talk
+            </span>
+
+            {/* Right: Nav icons */}
+            <div className="flex items-center gap-1">
+              {user && (
+                <>
+                  <button
+                    onClick={() => handleNavigate("/tickets")}
+                    className="p-2 rounded-lg text-foreground/60 hover:text-accent hover:bg-white/5 transition-colors"
+                    aria-label="チケット"
+                  >
+                    <Ticket className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleNavigate("/chat-history")}
+                    className="p-2 rounded-lg text-foreground/60 hover:text-accent hover:bg-white/5 transition-colors"
+                    aria-label="チャット履歴"
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleNavigate("/history")}
+                    className="p-2 rounded-lg text-foreground/60 hover:text-accent hover:bg-white/5 transition-colors"
+                    aria-label="トーク履歴"
+                  >
+                    <ScrollText className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleNavigate("/profile")}
+                    className="p-2 rounded-lg text-foreground/60 hover:text-accent hover:bg-white/5 transition-colors"
+                    aria-label="プロフィール"
+                  >
+                    <User className="w-4 h-4" />
+                  </button>
+                  <SettingsLink />
+                </>
+              )}
+              {!user && (
+                <button
+                  onClick={() => handleNavigate("/auth")}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full glass-surface text-xs text-foreground/80 hover:text-accent transition-colors"
+                >
+                  <LogIn className="w-3.5 h-3.5" />
+                  <span>ログイン</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </nav>
       )}
 
       {/* Content - layout changes based on session state but components stay mounted */}
       <div className={`relative z-10 flex flex-col items-center w-full px-4 md:px-6 animate-fade-in ${
-        isInSession 
-          ? "justify-center min-h-screen py-8" 
-          : "max-w-2xl pt-16 pb-6 md:py-12"
+        isInSession
+          ? "justify-center min-h-screen py-8"
+          : "max-w-2xl pt-14 pb-6 md:pt-16 md:pb-12"
       }`}>
         {/* Header - hidden during session */}
         {!isInSession && (
@@ -146,14 +182,11 @@ const Index = () => {
               話しかけて、<span className="text-accent">未来</span>を聴く
             </p>
 
-            {/* User greeting with settings link */}
+            {/* User greeting */}
             {user && profile?.display_name && (
-              <div className="mt-3 md:mt-4 flex items-center justify-center gap-2">
-                <p className="text-xs md:text-sm text-accent/80">
-                  ようこそ、{profile.display_name}さん ✨
-                </p>
-                <SettingsLink />
-              </div>
+              <p className="mt-3 md:mt-4 text-xs md:text-sm text-accent/80">
+                ようこそ、{profile.display_name}さん ✨
+              </p>
             )}
           </header>
         )}
