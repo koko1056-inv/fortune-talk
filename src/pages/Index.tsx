@@ -1,29 +1,14 @@
 import { useState, useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import VoiceChat from "@/components/VoiceChat";
 import TextChat from "@/components/TextChat";
 import ChatModeToggle, { ChatMode } from "@/components/ChatModeToggle";
 import StarField from "@/components/StarField";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
-import { Settings, LogIn } from "lucide-react";
-import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { LogIn } from "lucide-react";
 import { DailyFortuneCard } from "@/components/DailyFortuneCard";
 import { BackgroundMusic } from "@/components/BackgroundMusic";
-
-const SettingsLink = () => {
-  const { isAdmin } = useIsAdmin();
-  if (!isAdmin) return null;
-  return (
-    <Link
-      to="/settings"
-      className="touch-target rounded-xl text-foreground/40 hover:text-accent hover:bg-white/5 transition-colors"
-      aria-label="設定"
-    >
-      <Settings className="w-[18px] h-[18px]" />
-    </Link>
-  );
-};
 
 const Index = () => {
   const navigate = useNavigate();
@@ -67,25 +52,17 @@ const Index = () => {
       <BackgroundMusic />
       <StarField />
 
-      {/* Minimal top bar — logo + settings only (nav moved to bottom tab bar) */}
-      {!isInSession && (
+      {/* Login prompt for non-auth users — minimal floating pill */}
+      {!isInSession && !user && (
         <div className="fixed top-0 left-0 right-0 z-30 safe-area-top">
-          <div className="flex items-center justify-between px-4 py-2.5">
-            <span className="text-[11px] text-accent/50 tracking-[0.25em] uppercase font-display">
-              Fortune Talk
-            </span>
-            <div className="flex items-center gap-0.5">
-              {!user && (
-                <button
-                  onClick={() => navigate("/auth")}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-full glass-surface text-xs text-foreground/70 hover:text-accent transition-colors"
-                >
-                  <LogIn className="w-3.5 h-3.5" />
-                  <span>ログイン</span>
-                </button>
-              )}
-              <SettingsLink />
-            </div>
+          <div className="flex items-center justify-end px-4 py-3">
+            <button
+              onClick={() => navigate("/auth")}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-full glass-surface text-xs text-foreground/70 hover:text-accent transition-colors"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              <span>ログイン</span>
+            </button>
           </div>
         </div>
       )}
@@ -94,25 +71,21 @@ const Index = () => {
       <div className={`relative z-10 flex flex-col items-center w-full px-5 md:px-8 animate-fade-in ${
         isInSession
           ? "justify-center min-h-screen py-8"
-          : "max-w-2xl pt-12 pb-24 md:pt-16 md:pb-12"
+          : "max-w-2xl pt-4 pb-24 md:pt-8 md:pb-12"
       }`}>
-        {/* Header */}
+        {/* Compact Header — mobile-first */}
         {!isInSession && (
-          <header className="text-center mb-8 md:mb-12">
-            <p className="text-[10px] md:text-xs text-accent/50 tracking-[0.35em] uppercase mb-3 md:mb-4 font-display">
-              Fortune Talk
-            </p>
-
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-display font-bold tracking-wide text-foreground">
+          <header className="text-center mb-6 md:mb-10">
+            <h1 className="text-2xl md:text-4xl font-display font-bold tracking-wide text-foreground">
               <span className="text-gradient drop-shadow-[0_0_30px_hsl(45_80%_55%/0.4)]">フォーチュントーク</span>
             </h1>
 
-            <p className="mt-3 md:mt-4 text-sm md:text-base text-muted-foreground font-light tracking-wider">
+            <p className="mt-2 md:mt-3 text-sm text-muted-foreground font-light tracking-wider">
               話しかけて、<span className="text-accent/90">未来</span>を聴く
             </p>
 
             {user && profile?.display_name && (
-              <p className="mt-4 md:mt-5 text-xs text-accent/60 tracking-wide">
+              <p className="mt-3 text-xs text-accent/60 tracking-wide">
                 ようこそ、{profile.display_name}さん
               </p>
             )}
@@ -130,14 +103,14 @@ const Index = () => {
 
         {/* Daily Fortune Card */}
         {!isInSession && (
-          <div className="w-full mt-8 md:mt-10 flex justify-center">
+          <div className="w-full mt-6 md:mt-10 flex justify-center">
             <DailyFortuneCard />
           </div>
         )}
 
         {/* Mode Toggle */}
         {!isInSession && (
-          <div className="mt-6 md:mt-8">
+          <div className="mt-5 md:mt-8">
             <ChatModeToggle mode={chatMode} onChange={setChatMode} />
           </div>
         )}

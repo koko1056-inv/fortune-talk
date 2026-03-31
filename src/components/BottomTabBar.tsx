@@ -54,7 +54,7 @@ const BottomTabBar = () => {
       className="fixed bottom-0 left-0 right-0 z-40"
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
-      <div className="glass-elevated border-t border-white/[0.06]">
+      <div className="glass-elevated border-t border-white/[0.06] shadow-[0_-4px_20px_rgba(0,0,0,0.3)]">
         <div className="flex items-stretch justify-around max-w-lg mx-auto">
           {tabs.map((tab) => {
             const isActive = currentPath === tab.path;

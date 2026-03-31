@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import StarField from "@/components/StarField";
-import { Loader2, User, Calendar, Droplets, Star, Save } from "lucide-react";
+import { Loader2, User, Calendar, Droplets, Star, Save, Settings } from "lucide-react";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 const BLOOD_TYPES = ["A", "B", "O", "AB"];
 
@@ -30,6 +31,7 @@ const ZODIAC_EMOJIS: Record<string, string> = {
 const Profile = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading, signOut } = useAuth();
+  const { isAdmin } = useIsAdmin();
   const { profile, loading: profileLoading, updateProfile } = useProfile();
   
   const [displayName, setDisplayName] = useState("");
@@ -192,6 +194,17 @@ const Profile = () => {
             )}
           </Button>
         </div>
+
+        {/* Admin Settings */}
+        {isAdmin && (
+          <button
+            onClick={() => navigate("/settings")}
+            className="w-full mt-6 flex items-center justify-center gap-2 py-3 rounded-xl glass-surface text-sm text-muted-foreground hover:text-accent transition-colors"
+          >
+            <Settings className="w-4 h-4" />
+            管理者設定
+          </button>
+        )}
 
         {/* Info */}
         <p className="text-center text-xs text-muted-foreground/60 mt-6">

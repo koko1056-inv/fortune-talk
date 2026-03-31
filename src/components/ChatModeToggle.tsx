@@ -24,7 +24,7 @@ const ChatModeToggle = ({ mode, onChange, disabled }: ChatModeToggleProps) => {
         )}
       >
         <Mic className="w-4 h-4" />
-        <span className="hidden sm:inline">音声</span>
+        <span>音声</span>
       </button>
       <button
         onClick={() => onChange("text")}
@@ -38,7 +38,7 @@ const ChatModeToggle = ({ mode, onChange, disabled }: ChatModeToggleProps) => {
         )}
       >
         <MessageSquare className="w-4 h-4" />
-        <span className="hidden sm:inline">テキスト</span>
+        <span>テキスト</span>
       </button>
     </div>
   );

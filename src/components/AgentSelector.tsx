@@ -85,7 +85,7 @@ const AgentSelector = ({
       {/* Carousel with swipe support */}
       <div
         ref={containerRef}
-        className="relative w-full h-60 md:h-72 flex items-center justify-center touch-pan-y select-none"
+        className="relative w-full h-52 md:h-72 flex items-center justify-center touch-pan-y select-none"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >

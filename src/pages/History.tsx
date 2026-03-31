@@ -94,7 +94,7 @@ const History = () => {
             {readings.map((reading) => (
               <div
                 key={reading.id}
-                className="bg-card/50 backdrop-blur-sm border border-border/30 rounded-xl p-4 hover:border-accent/40 transition-colors"
+                className="glass-surface rounded-xl p-4 hover:border-accent/40 transition-colors"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-center gap-3">
