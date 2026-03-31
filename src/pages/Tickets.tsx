@@ -28,9 +28,9 @@ const Tickets = () => {
     <div className="min-h-screen bg-background relative overflow-hidden">
       <StarField />
 
-      <div className="relative z-10 container mx-auto px-4 pt-24 pb-8 max-w-2xl">
+      <div className="relative z-10 container mx-auto px-4 pt-16 pb-8 max-w-2xl">
         <div className="flex items-center gap-4 mb-8">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/')} className="hover-scale">
+          <Button variant="ghost" size="icon" onClick={() => navigate('/')} className="touch-target">
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>

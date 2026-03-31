@@ -65,27 +65,27 @@ const History = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background font-display">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border/30">
-        <div className="max-w-2xl mx-auto px-4 pt-18 pb-4 flex items-center gap-4">
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      <div className="relative z-10 max-w-2xl mx-auto px-4 pt-16 pb-8">
+        {/* Header */}
+        <div className="flex items-center gap-4 mb-8">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate("/")}
-            className="text-foreground hover:bg-accent/20"
+            className="touch-target text-foreground hover:bg-accent/20"
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
-            <span className="text-2xl">📜</span>
-            占い履歴
-          </h1>
+          <div>
+            <h1 className="text-2xl font-display font-bold text-foreground">
+              占い履歴
+            </h1>
+            <p className="text-xs text-muted-foreground mt-0.5">過去の鑑定記録</p>
+          </div>
         </div>
-      </div>
 
-      {/* Content */}
-      <div className="max-w-2xl mx-auto px-4 py-6">
+        {/* Content */}
         {readings.length === 0 ? (
           <div className="text-center py-16">
             <div className="text-6xl mb-4">🌙</div>

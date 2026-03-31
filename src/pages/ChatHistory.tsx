@@ -158,12 +158,15 @@ const ChatHistory = () => {
     <div className="min-h-screen bg-background relative overflow-hidden">
       <StarField />
 
-      <div className="relative z-10 container mx-auto px-4 pt-24 pb-8 max-w-2xl">
+      <div className="relative z-10 container mx-auto px-4 pt-16 pb-8 max-w-2xl">
         <div className="flex items-center gap-4 mb-8">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="touch-target">
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-2xl font-bold">チャット履歴</h1>
+          <div>
+            <h1 className="text-2xl font-display font-bold text-foreground">チャット履歴</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">テキストでの相談記録</p>
+          </div>
         </div>
 
         {(!sessions || sessions.length === 0) ? (

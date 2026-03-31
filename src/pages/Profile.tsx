@@ -91,16 +91,18 @@ const Profile = () => {
     <div className="relative min-h-screen overflow-hidden">
       <StarField />
       
-      <div className="relative z-10 w-full max-w-lg mx-auto px-6 py-12 animate-fade-in">
+      <div className="relative z-10 w-full max-w-lg mx-auto px-5 pt-16 pb-8 animate-fade-in">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <button
-            onClick={() => navigate("/")}
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span className="text-sm">戻る</span>
-          </button>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate("/")}
+              className="touch-target rounded-xl text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <h1 className="text-2xl font-display font-bold text-foreground">プロフィール</h1>
+          </div>
           <button
             onClick={handleSignOut}
             className="text-sm text-muted-foreground hover:text-destructive transition-colors"
@@ -109,14 +111,11 @@ const Profile = () => {
           </button>
         </div>
 
-        {/* Title */}
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-primary/40 via-accent/20 to-primary/40 mb-6 animate-crystal-glow">
-            <User className="w-10 h-10 text-accent" />
+        {/* Avatar & subtitle */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-primary/30 via-accent/15 to-primary/30 mb-4 animate-crystal-glow">
+            <User className="w-8 h-8 text-accent" />
           </div>
-          <h1 className="text-3xl font-display font-bold text-gradient mb-2">
-            あなたのプロフィール
-          </h1>
           <p className="text-muted-foreground text-sm">
             占い師があなたをより深く理解するために
           </p>
