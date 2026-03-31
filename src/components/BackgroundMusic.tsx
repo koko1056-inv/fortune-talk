@@ -49,7 +49,7 @@ export const BackgroundMusic = () => {
         variant="ghost"
         size="icon"
         onClick={toggleMusic}
-        className="fixed bottom-4 right-4 z-50 glass-surface hover-scale rounded-full w-12 h-12"
+        className="fixed bottom-6 right-4 z-50 glass-surface rounded-full w-11 h-11 safe-area-bottom"
         title={isPlaying ? "音楽を停止" : "音楽を再生"}
       >
         {isPlaying ? (

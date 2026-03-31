@@ -67,10 +67,11 @@ const PaywallScreen = ({ open, onClose, onSubscribe, zodiacSign }: Props) => {
     <div className="fixed inset-0 z-50 flex flex-col bg-background">
       <StarField />
 
-      {/* Close button */}
+      {/* Close button — proper touch target */}
       <button
         onClick={onClose}
-        className="absolute top-6 right-6 z-20 p-2 text-muted-foreground hover:text-foreground transition-colors"
+        className="absolute top-6 right-4 z-20 touch-target rounded-full text-muted-foreground hover:text-foreground transition-colors safe-area-top"
+        aria-label="閉じる"
       >
         <X className="w-5 h-5" />
       </button>
@@ -94,7 +95,7 @@ const PaywallScreen = ({ open, onClose, onSubscribe, zodiacSign }: Props) => {
         <div className="w-full max-w-sm mb-8">
           <div className="grid grid-cols-2 gap-3">
             {/* Free */}
-            <div className="p-4 rounded-2xl bg-card/40 border border-muted-foreground/10">
+            <div className="p-4 rounded-2xl glass-surface">
               <h3 className="text-xs text-muted-foreground font-medium mb-3 uppercase tracking-wider">
                 無料
               </h3>
@@ -107,7 +108,7 @@ const PaywallScreen = ({ open, onClose, onSubscribe, zodiacSign }: Props) => {
             </div>
 
             {/* Premium */}
-            <div className="p-4 rounded-2xl bg-accent/5 border border-accent/30 shadow-[0_0_20px_hsl(45_80%_55%/0.1)]">
+            <div className="p-4 rounded-2xl glass-elevated border-accent/20 shadow-[0_0_20px_hsl(45_80%_55%/0.08)]">
               <h3 className="text-xs text-accent font-medium mb-3 uppercase tracking-wider flex items-center gap-1">
                 <Sparkles className="w-3 h-3" /> プレミアム
               </h3>
@@ -129,8 +130,8 @@ const PaywallScreen = ({ open, onClose, onSubscribe, zodiacSign }: Props) => {
               onClick={() => setSelectedPlan(plan.id)}
               className={`flex-1 relative p-3 rounded-2xl border transition-all ${
                 selectedPlan === plan.id
-                  ? "border-accent bg-accent/10 shadow-[0_0_20px_hsl(45_80%_55%/0.15)]"
-                  : "border-muted-foreground/15 bg-card/30 hover:border-accent/30"
+                  ? "border-accent/40 glass-elevated shadow-[0_0_20px_hsl(45_80%_55%/0.12)]"
+                  : "border-border/30 glass-surface hover:border-accent/20"
               }`}
             >
               {plan.badge && (

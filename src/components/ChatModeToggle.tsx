@@ -16,9 +16,9 @@ const ChatModeToggle = ({ mode, onChange, disabled }: ChatModeToggleProps) => {
         onClick={() => onChange("voice")}
         disabled={disabled}
         className={cn(
-          "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300",
+          "touch-target gap-2 px-5 rounded-full text-sm font-medium transition-all duration-300",
           mode === "voice"
-            ? "bg-primary text-primary-foreground shadow-lg"
+            ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
             : "text-muted-foreground hover:text-foreground",
           disabled && "opacity-50 cursor-not-allowed"
         )}
@@ -30,9 +30,9 @@ const ChatModeToggle = ({ mode, onChange, disabled }: ChatModeToggleProps) => {
         onClick={() => onChange("text")}
         disabled={disabled}
         className={cn(
-          "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300",
+          "touch-target gap-2 px-5 rounded-full text-sm font-medium transition-all duration-300",
           mode === "text"
-            ? "bg-primary text-primary-foreground shadow-lg"
+            ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
             : "text-muted-foreground hover:text-foreground",
           disabled && "opacity-50 cursor-not-allowed"
         )}
