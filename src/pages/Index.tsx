@@ -7,7 +7,6 @@ import StarField from "@/components/StarField";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { LogIn } from "lucide-react";
-import { DailyFortuneCard } from "@/components/DailyFortuneCard";
 import { BackgroundMusic } from "@/components/BackgroundMusic";
 
 const Index = () => {
@@ -52,7 +51,7 @@ const Index = () => {
       <BackgroundMusic />
       <StarField />
 
-      {/* Login prompt for non-auth users — minimal floating pill */}
+      {/* Login prompt for non-auth users */}
       {!isInSession && !user && (
         <div className="fixed top-0 left-0 right-0 z-30 safe-area-top">
           <div className="flex items-center justify-end px-4 py-3">
@@ -71,9 +70,9 @@ const Index = () => {
       <div className={`relative z-10 flex flex-col items-center w-full px-5 md:px-8 animate-fade-in ${
         isInSession
           ? "justify-center min-h-screen py-8"
-          : "max-w-2xl pt-4 pb-24 md:pt-8 md:pb-12"
+          : "max-w-2xl pt-4 pb-28 md:pt-8 md:pb-12"
       }`}>
-        {/* Compact Header — mobile-first */}
+        {/* Header */}
         {!isInSession && (
           <header className="text-center mb-6 md:mb-10">
             <h1 className="text-2xl md:text-4xl font-display font-bold tracking-wide text-foreground">
@@ -101,16 +100,9 @@ const Index = () => {
           )}
         </main>
 
-        {/* Daily Fortune Card */}
-        {!isInSession && (
-          <div className="w-full mt-6 md:mt-10 flex justify-center">
-            <DailyFortuneCard />
-          </div>
-        )}
-
         {/* Mode Toggle */}
         {!isInSession && (
-          <div className="mt-5 md:mt-8">
+          <div className="mt-6 md:mt-8">
             <ChatModeToggle mode={chatMode} onChange={setChatMode} />
           </div>
         )}

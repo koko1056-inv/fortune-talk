@@ -1,31 +1,25 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile, calculateZodiacSign } from "@/hooks/useProfile";
+import { useBillingStatus } from "@/hooks/useBillingStatus";
+import { useSubscription } from "@/hooks/useSubscription";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import StarField from "@/components/StarField";
-import { Loader2, User, Calendar, Droplets, Star, Save, Settings } from "lucide-react";
+import { Loader2, User, Calendar, Droplets, Star, Save, Settings, Ticket, Crown, ChevronRight, FileText } from "lucide-react";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { cn } from "@/lib/utils";
 
 const BLOOD_TYPES = ["A", "B", "O", "AB"];
 
 const ZODIAC_EMOJIS: Record<string, string> = {
-  "牡羊座": "♈",
-  "牡牛座": "♉",
-  "双子座": "♊",
-  "蟹座": "♋",
-  "獅子座": "♌",
-  "乙女座": "♍",
-  "天秤座": "♎",
-  "蠍座": "♏",
-  "射手座": "♐",
-  "山羊座": "♑",
-  "水瓶座": "♒",
-  "魚座": "♓",
+  "牡羊座": "♈", "牡牛座": "♉", "双子座": "♊", "蟹座": "♋",
+  "獅子座": "♌", "乙女座": "♍", "天秤座": "♎", "蠍座": "♏",
+  "射手座": "♐", "山羊座": "♑", "水瓶座": "♒", "魚座": "♓",
 };
 
 const Profile = () => {
@@ -33,7 +27,9 @@ const Profile = () => {
   const { user, loading: authLoading, signOut } = useAuth();
   const { isAdmin } = useIsAdmin();
   const { profile, loading: profileLoading, updateProfile } = useProfile();
-  
+  const { billingStatus } = useBillingStatus();
+  const { isPremium, subscription } = useSubscription();
+
   const [displayName, setDisplayName] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [bloodType, setBloodType] = useState("");
@@ -61,13 +57,12 @@ const Profile = () => {
         birth_date: birthDate || null,
         blood_type: bloodType || null,
       });
-
       if (error) {
         toast.error("保存に失敗しました");
       } else {
-        toast.success("プロフィールを保存しました ✨");
+        toast.success("プロフィールを保存しました");
       }
-    } catch (error) {
+    } catch {
       toast.error("エラーが発生しました");
     } finally {
       setSaving(false);
@@ -89,11 +84,18 @@ const Profile = () => {
     );
   }
 
+  const planLabel = isPremium
+    ? subscription?.planType === "yearly" ? "年間プレミアム"
+      : subscription?.planType === "monthly" ? "月間プレミアム"
+      : subscription?.planType === "weekly" ? "週間プレミアム"
+      : "プレミアム"
+    : "フリー";
+
   return (
     <div className="relative min-h-screen overflow-hidden">
       <StarField />
-      
-      <div className="relative z-10 w-full max-w-lg mx-auto px-5 pt-6 pb-24 animate-fade-in">
+
+      <div className="relative z-10 w-full max-w-lg mx-auto px-5 pt-6 pb-28 animate-fade-in">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-display font-bold text-foreground">マイページ</h1>
@@ -105,44 +107,73 @@ const Profile = () => {
           </button>
         </div>
 
-        {/* Avatar & subtitle */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-primary/30 via-accent/15 to-primary/30 mb-4 animate-crystal-glow">
-            <User className="w-8 h-8 text-accent" />
+        {/* Plan & Tickets Card */}
+        <div className="glass-surface rounded-2xl p-5 mb-5">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2.5">
+              {isPremium ? (
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent to-amber-600 flex items-center justify-center">
+                  <Crown className="w-5 h-5 text-accent-foreground" />
+                </div>
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center">
+                  <Ticket className="w-5 h-5 text-primary" />
+                </div>
+              )}
+              <div>
+                <p className="text-sm font-medium text-foreground">{planLabel}</p>
+                <p className="text-[10px] text-muted-foreground">
+                  {isPremium ? "無制限で鑑定可能" : `チケット残り ${billingStatus.ticketBalance} 枚`}
+                </p>
+              </div>
+            </div>
           </div>
-          <p className="text-muted-foreground text-sm">
-            占い師があなたをより深く理解するために
-          </p>
+
+          <button
+            onClick={() => navigate("/tickets")}
+            className="w-full flex items-center justify-between py-3 px-4 rounded-xl bg-primary/10 hover:bg-primary/20 transition-colors group"
+          >
+            <span className="text-sm text-primary font-medium">
+              {isPremium ? "プランを管理" : "チケット購入・プラン変更"}
+            </span>
+            <ChevronRight className="w-4 h-4 text-primary group-hover:translate-x-0.5 transition-transform" />
+          </button>
         </div>
 
         {/* Zodiac Display */}
         {zodiacSign && (
-          <div className="glass-surface rounded-2xl p-6 mb-6 text-center">
-            <div className="text-5xl mb-2">{ZODIAC_EMOJIS[zodiacSign]}</div>
-            <p className="text-accent font-display text-xl">{zodiacSign}</p>
-            <p className="text-muted-foreground text-xs mt-1">あなたの星座</p>
+          <div className="glass-surface rounded-2xl p-5 mb-5 flex items-center gap-4">
+            <div className="text-4xl">{ZODIAC_EMOJIS[zodiacSign]}</div>
+            <div>
+              <p className="text-accent font-display text-lg">{zodiacSign}</p>
+              <p className="text-muted-foreground text-xs">あなたの星座</p>
+            </div>
           </div>
         )}
 
-        {/* Form */}
-        <div className="glass-surface rounded-2xl p-6 space-y-6">
+        {/* Profile Form */}
+        <div className="glass-surface rounded-2xl p-5 space-y-5">
+          <p className="text-xs text-muted-foreground">
+            占い師がより的確にアドバイスできるよう情報を入力してください
+          </p>
+
           <div className="space-y-2">
-            <Label htmlFor="displayName" className="text-foreground/80 flex items-center gap-2">
-              <User className="w-4 h-4 text-accent" />
-              お名前（ニックネーム）
+            <Label htmlFor="displayName" className="text-foreground/80 flex items-center gap-2 text-sm">
+              <User className="w-3.5 h-3.5 text-accent" />
+              お名前
             </Label>
             <Input
               id="displayName"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="例：タロウ"
+              placeholder="ニックネーム"
               className="bg-background/50 border-border/50 focus:border-accent"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="birthDate" className="text-foreground/80 flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-accent" />
+            <Label htmlFor="birthDate" className="text-foreground/80 flex items-center gap-2 text-sm">
+              <Calendar className="w-3.5 h-3.5 text-accent" />
               生年月日
             </Label>
             <Input
@@ -153,16 +184,16 @@ const Profile = () => {
               className="bg-background/50 border-border/50 focus:border-accent"
             />
             {zodiacSign && (
-              <p className="text-xs text-accent flex items-center gap-1 mt-1">
+              <p className="text-xs text-accent flex items-center gap-1">
                 <Star className="w-3 h-3" />
-                自動計算: {zodiacSign}
+                {zodiacSign}
               </p>
             )}
           </div>
 
           <div className="space-y-2">
-            <Label className="text-foreground/80 flex items-center gap-2">
-              <Droplets className="w-4 h-4 text-accent" />
+            <Label className="text-foreground/80 flex items-center gap-2 text-sm">
+              <Droplets className="w-3.5 h-3.5 text-accent" />
               血液型
             </Label>
             <Select value={bloodType} onValueChange={setBloodType}>
@@ -182,7 +213,7 @@ const Profile = () => {
           <Button
             onClick={handleSave}
             disabled={saving}
-            className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-glow"
+            className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground"
           >
             {saving ? (
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -195,22 +226,34 @@ const Profile = () => {
           </Button>
         </div>
 
-        {/* Admin Settings */}
-        {isAdmin && (
-          <button
-            onClick={() => navigate("/settings")}
-            className="w-full mt-6 flex items-center justify-center gap-2 py-3 rounded-xl glass-surface text-sm text-muted-foreground hover:text-accent transition-colors"
-          >
-            <Settings className="w-4 h-4" />
-            管理者設定
-          </button>
-        )}
+        {/* Links Section */}
+        <div className="mt-5 space-y-2">
+          {/* Admin Settings */}
+          {isAdmin && (
+            <button
+              onClick={() => navigate("/settings")}
+              className="w-full flex items-center justify-between py-3.5 px-4 rounded-xl glass-surface text-sm text-muted-foreground hover:text-accent transition-colors"
+            >
+              <span className="flex items-center gap-2">
+                <Settings className="w-4 h-4" />
+                管理者設定
+              </span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          )}
 
-        {/* Info */}
-        <p className="text-center text-xs text-muted-foreground/60 mt-6">
-          ✧ 占い師はあなたの情報を参照して、<br />
-          より的確なアドバイスをお届けします ✧
-        </p>
+          {/* Commercial Transaction */}
+          <Link
+            to="/commercial-transaction"
+            className="w-full flex items-center justify-between py-3.5 px-4 rounded-xl glass-surface text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <span className="flex items-center gap-2">
+              <FileText className="w-4 h-4" />
+              特定商取引法に基づく表記
+            </span>
+            <ChevronRight className="w-4 h-4" />
+          </Link>
+        </div>
       </div>
     </div>
   );

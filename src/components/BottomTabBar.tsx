@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { ScrollText, MessageSquare, Ticket, User, Sparkles } from "lucide-react";
+import { Sun, ScrollText, Sparkles, Users, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -11,12 +11,12 @@ interface TabItem {
 }
 
 const leftTabs: TabItem[] = [
+  { path: "/today", label: "今日", icon: Sun },
   { path: "/history", label: "履歴", icon: ScrollText },
-  { path: "/chat-history", label: "チャット", icon: MessageSquare },
 ];
 
 const rightTabs: TabItem[] = [
-  { path: "/tickets", label: "プラン", icon: Ticket },
+  { path: "/agents", label: "占い師", icon: Users },
   { path: "/profile", label: "マイページ", icon: User },
 ];
 

@@ -9,6 +9,8 @@ import Settings from "./pages/Settings";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import History from "./pages/History";
+import Today from "./pages/Today";
+import Agents from "./pages/Agents";
 import Tickets from "./pages/Tickets";
 import ChatHistory from "./pages/ChatHistory";
 import CommercialTransaction from "./pages/CommercialTransaction";
@@ -28,12 +30,15 @@ const AppContent = () => {
     <>
       <Routes>
         <Route path="/" element={<Index />} />
+        <Route path="/today" element={<Today />} />
+        <Route path="/agents" element={<Agents />} />
         <Route path="/onboarding" element={<Onboarding />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/history" element={<History />} />
         <Route path="/tickets" element={<Tickets />} />
         <Route path="/commercial-transaction" element={<CommercialTransaction />} />
+        {/* Legacy route — redirects handled by merged History page */}
         <Route path="/chat-history" element={<ChatHistory />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="*" element={<NotFound />} />
