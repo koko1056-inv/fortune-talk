@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { ChevronLeft } from "lucide-react";
+import { CakeIcon } from "./OnboardingIcons";
 
 interface Props {
   value: string;
@@ -9,7 +10,7 @@ interface Props {
   onBack: () => void;
 }
 
-const zodiacEmoji: Record<string, string> = {
+const zodiacSymbol: Record<string, string> = {
   "牡羊座": "♈", "牡牛座": "♉", "双子座": "♊", "蟹座": "♋",
   "獅子座": "♌", "乙女座": "♍", "天秤座": "♎", "蠍座": "♏",
   "射手座": "♐", "山羊座": "♑", "水瓶座": "♒", "魚座": "♓",
@@ -38,7 +39,7 @@ const OnboardingBirthDate = ({ value, zodiacSign, onChange, onNext, onBack }: Pr
         <ChevronLeft className="w-5 h-5" />
       </button>
 
-      <div className="text-5xl mb-6">🎂</div>
+      <CakeIcon className="w-14 h-14 mb-6" />
 
       <h2 className="text-2xl font-display font-semibold text-foreground mb-3">
         あなたが生まれた日を
@@ -67,7 +68,7 @@ const OnboardingBirthDate = ({ value, zodiacSign, onChange, onNext, onBack }: Pr
             showZodiac ? "opacity-100 scale-100" : "opacity-0 scale-75"
           }`}
         >
-          <span className="text-3xl">{zodiacEmoji[zodiacSign] || "⭐"}</span>
+          <span className="text-2xl text-accent">{zodiacSymbol[zodiacSign] || "⭐"}</span>
           <span className="text-accent font-medium">{zodiacSign}</span>
         </div>
       )}

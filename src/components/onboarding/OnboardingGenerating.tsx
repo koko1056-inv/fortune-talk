@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { ConstellationIcon, MoonStarIcon, SparkleIcon } from "./OnboardingIcons";
 
 interface Props {
   isGenerating: boolean;
@@ -8,16 +9,15 @@ interface Props {
 }
 
 const phases = [
-  { text: "星の配置を読み取っています", emoji: "⭐" },
-  { text: "運命の糸を紐解いています", emoji: "🌙" },
-  { text: "あなたの物語を見つけています", emoji: "✨" },
+  { text: "星の配置を読み取っています", Icon: ConstellationIcon },
+  { text: "運命の糸を紐解いています", Icon: MoonStarIcon },
+  { text: "あなたの物語を見つけています", Icon: SparkleIcon },
 ];
 
 const OnboardingGenerating = ({ isGenerating, hasError, onRetry, displayName }: Props) => {
   const [phaseIndex, setPhaseIndex] = useState(0);
   const [dots, setDots] = useState("");
 
-  // Cycle through phases
   useEffect(() => {
     if (!isGenerating) return;
     const interval = setInterval(() => {
@@ -26,7 +26,6 @@ const OnboardingGenerating = ({ isGenerating, hasError, onRetry, displayName }: 
     return () => clearInterval(interval);
   }, [isGenerating]);
 
-  // Animate dots
   useEffect(() => {
     if (!isGenerating) return;
     const interval = setInterval(() => {
@@ -40,7 +39,12 @@ const OnboardingGenerating = ({ isGenerating, hasError, onRetry, displayName }: 
   if (hasError) {
     return (
       <div className="flex flex-col items-center text-center min-h-[50vh] justify-center">
-        <div className="text-5xl mb-6">😔</div>
+        <svg className="w-14 h-14 mb-6 text-muted-foreground" viewBox="0 0 48 48" fill="none">
+          <circle cx="24" cy="24" r="18" stroke="currentColor" strokeWidth="1.5" opacity="0.5" />
+          <path d="M16 28C18 26 20 25 24 25C28 25 30 26 32 28" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
+          <circle cx="17" cy="19" r="2" fill="currentColor" opacity="0.4" />
+          <circle cx="31" cy="19" r="2" fill="currentColor" opacity="0.4" />
+        </svg>
         <h2 className="text-xl font-display font-semibold text-foreground mb-3">
           接続に問題が発生しました
         </h2>
@@ -57,18 +61,15 @@ const OnboardingGenerating = ({ isGenerating, hasError, onRetry, displayName }: 
     );
   }
 
+  const PhaseIcon = phase.Icon;
+
   return (
     <div className="flex flex-col items-center text-center min-h-[60vh] justify-center">
-      {/* Animated crystal ball */}
+      {/* Animated orb */}
       <div className="relative mb-10">
         <div className="absolute inset-0 w-32 h-32 rounded-full bg-primary/20 blur-2xl animate-pulse" />
         <div className="relative w-32 h-32 rounded-full bg-gradient-to-br from-primary/30 via-card to-primary/10 border border-accent/20 flex items-center justify-center shadow-[0_0_40px_hsl(280_70%_50%/0.3)]">
-          <span
-            className="text-5xl transition-all duration-500"
-            style={{ transform: `rotate(${phaseIndex * 120}deg)` }}
-          >
-            {phase.emoji}
-          </span>
+          <PhaseIcon className="w-14 h-14 transition-all duration-500" />
         </div>
 
         {/* Orbiting particles */}
@@ -86,7 +87,6 @@ const OnboardingGenerating = ({ isGenerating, hasError, onRetry, displayName }: 
         ))}
       </div>
 
-      {/* Phase text */}
       <p className="text-lg text-foreground/80 font-display mb-2 transition-all duration-500">
         {phase.text}{dots}
       </p>
@@ -94,7 +94,6 @@ const OnboardingGenerating = ({ isGenerating, hasError, onRetry, displayName }: 
         {displayName}さんの星を深く読んでいます
       </p>
 
-      {/* Orbit animation keyframes injected via style */}
       <style>{`
         @keyframes orbit {
           0% { transform: rotate(0deg) translateX(80px) rotate(0deg) scale(1); opacity: 0.6; }

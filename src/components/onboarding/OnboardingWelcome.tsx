@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { CrystalBallIcon } from "./OnboardingIcons";
 
 interface Props {
   onNext: () => void;
@@ -24,13 +25,10 @@ const OnboardingWelcome = ({ onNext }: Props) => {
           show ? "opacity-100 scale-100" : "opacity-0 scale-50"
         }`}
       >
-        <div className="absolute inset-0 text-8xl blur-xl opacity-40 animate-pulse">
-          🔮
+        <div className="absolute inset-0 blur-xl opacity-40 animate-pulse">
+          <CrystalBallIcon className="w-28 h-28" />
         </div>
-        <div className="relative text-8xl">🔮</div>
-        <div className="absolute -top-4 -right-4 text-2xl animate-twinkle">✦</div>
-        <div className="absolute -bottom-2 -left-6 text-xl animate-twinkle" style={{ animationDelay: "0.7s" }}>✧</div>
-        <div className="absolute top-2 -left-8 text-lg animate-twinkle" style={{ animationDelay: "1.4s" }}>⋆</div>
+        <CrystalBallIcon className="relative w-28 h-28" />
       </div>
 
       {/* Title */}
@@ -66,7 +64,7 @@ const OnboardingWelcome = ({ onNext }: Props) => {
           showButton ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
         }`}
       >
-        始める ✦
+        始める
       </button>
     </div>
   );

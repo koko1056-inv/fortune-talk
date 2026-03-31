@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Heart, Briefcase, Search, Leaf, Eye, Coins } from "lucide-react";
 
 interface Props {
   value: string[];
@@ -9,12 +9,12 @@ interface Props {
 }
 
 const topics = [
-  { id: "love", emoji: "💕", label: "恋愛・人間関係", desc: "出会い・パートナーとの未来" },
-  { id: "career", emoji: "💼", label: "仕事・キャリア", desc: "転職・才能の活かし方" },
-  { id: "self", emoji: "🪞", label: "自分自身を知りたい", desc: "性格・本質・強みと弱み" },
-  { id: "health", emoji: "🌿", label: "健康・ウェルネス", desc: "心と体のバランス" },
-  { id: "future", emoji: "🔮", label: "未来の展望", desc: "運気の流れ・転機の時期" },
-  { id: "money", emoji: "💰", label: "金運・財運", desc: "お金の流れ・投資の時期" },
+  { id: "love", icon: Heart, label: "恋愛・人間関係", desc: "出会い・パートナーとの未来" },
+  { id: "career", icon: Briefcase, label: "仕事・キャリア", desc: "転職・才能の活かし方" },
+  { id: "self", icon: Search, label: "自分自身を知りたい", desc: "性格・本質・強みと弱み" },
+  { id: "health", icon: Leaf, label: "健康・ウェルネス", desc: "心と体のバランス" },
+  { id: "future", icon: Eye, label: "未来の展望", desc: "運気の流れ・転機の時期" },
+  { id: "money", icon: Coins, label: "金運・財運", desc: "お金の流れ・投資の時期" },
 ];
 
 const OnboardingGuidance = ({ value, onChange, onNext, onBack }: Props) => {
@@ -47,8 +47,9 @@ const OnboardingGuidance = ({ value, onChange, onNext, onBack }: Props) => {
       </p>
 
       <div className="grid grid-cols-2 gap-3 w-full max-w-sm mb-8">
-        {topics.map((topic, i) => {
+        {topics.map((topic) => {
           const selected = value.includes(topic.id);
+          const Icon = topic.icon;
           return (
             <button
               key={topic.id}
@@ -58,9 +59,8 @@ const OnboardingGuidance = ({ value, onChange, onNext, onBack }: Props) => {
                   ? "border-accent bg-accent/10 shadow-[0_0_20px_hsl(45_80%_55%/0.15)]"
                   : "border-muted-foreground/15 bg-card/40 hover:border-accent/30"
               }`}
-              style={{ animationDelay: `${i * 80}ms` }}
             >
-              <span className="text-3xl">{topic.emoji}</span>
+              <Icon className={`w-7 h-7 ${selected ? "text-accent" : "text-foreground/50"}`} />
               <span className={`text-sm font-medium ${selected ? "text-accent" : "text-foreground/80"}`}>
                 {topic.label}
               </span>
@@ -69,7 +69,9 @@ const OnboardingGuidance = ({ value, onChange, onNext, onBack }: Props) => {
               </span>
               {selected && (
                 <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-accent flex items-center justify-center">
-                  <span className="text-accent-foreground text-xs">✓</span>
+                  <svg className="w-3 h-3 text-accent-foreground" viewBox="0 0 12 12" fill="none">
+                    <path d="M2 6L5 9L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
                 </div>
               )}
             </button>
@@ -82,7 +84,7 @@ const OnboardingGuidance = ({ value, onChange, onNext, onBack }: Props) => {
         disabled={value.length === 0}
         className="px-10 py-3.5 rounded-full bg-accent text-accent-foreground font-semibold tracking-wider shadow-[0_0_20px_hsl(45_80%_55%/0.3)] hover:shadow-[0_0_30px_hsl(45_80%_55%/0.5)] disabled:opacity-30 disabled:shadow-none transition-all active:scale-95"
       >
-        あなたの星を読む ✦
+        あなたの星を読む
       </button>
     </div>
   );

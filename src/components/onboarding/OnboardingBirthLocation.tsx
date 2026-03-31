@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { ChevronLeft } from "lucide-react";
+import { MapPinIcon } from "./OnboardingIcons";
 
 interface Props {
   value: string;
@@ -32,7 +33,7 @@ const OnboardingBirthLocation = ({ value, onChange, onNext, onBack }: Props) => 
         <ChevronLeft className="w-5 h-5" />
       </button>
 
-      <div className="text-5xl mb-6">📍</div>
+      <MapPinIcon className="w-14 h-14 mb-6" />
 
       <h2 className="text-2xl font-display font-semibold text-foreground mb-3">
         生まれた場所は

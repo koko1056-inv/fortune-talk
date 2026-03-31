@@ -17,7 +17,7 @@ interface Props {
   onNext: () => void;
 }
 
-const zodiacEmoji: Record<string, string> = {
+const zodiacSymbol: Record<string, string> = {
   "牡羊座": "♈", "牡牛座": "♉", "双子座": "♊", "蟹座": "♋",
   "獅子座": "♌", "乙女座": "♍", "天秤座": "♎", "蠍座": "♏",
   "射手座": "♐", "山羊座": "♑", "水瓶座": "♒", "魚座": "♓",
@@ -33,12 +33,10 @@ const OnboardingReading = ({ result, zodiacSign, displayName, onNext }: Props) =
   const [showTraits, setShowTraits] = useState(false);
   const [showButton, setShowButton] = useState(false);
 
-  // Split summary into paragraphs
   const paragraphs = result.summary
     .split(/\n\n|\n/)
     .filter((p) => p.trim().length > 0);
 
-  // Sequentially reveal paragraphs
   useEffect(() => {
     const timers: NodeJS.Timeout[] = [];
     paragraphs.forEach((_, i) => {
@@ -53,7 +51,7 @@ const OnboardingReading = ({ result, zodiacSign, displayName, onNext }: Props) =
     <div className="flex flex-col items-center py-8 min-h-screen">
       {/* Header badge */}
       <div className="flex items-center gap-2 mb-6 px-4 py-2 rounded-full bg-accent/10 border border-accent/20">
-        <span className="text-2xl">{zodiacEmoji[zodiacSign] || "⭐"}</span>
+        <span className="text-2xl text-accent">{zodiacSymbol[zodiacSign] || "★"}</span>
         <span className="text-accent text-sm font-medium">{zodiacSign}</span>
         {result.birthChartData.element && (
           <>
@@ -71,7 +69,7 @@ const OnboardingReading = ({ result, zodiacSign, displayName, onNext }: Props) =
         <span className="text-accent"> パーソナリティ</span>
       </h2>
 
-      {/* Reading content - paragraphs fade in sequentially */}
+      {/* Reading content */}
       <div className="w-full max-w-sm space-y-5 mb-8">
         {paragraphs.map((paragraph, i) => (
           <p
@@ -108,7 +106,7 @@ const OnboardingReading = ({ result, zodiacSign, displayName, onNext }: Props) =
           onClick={onNext}
           className="px-10 py-3.5 rounded-full bg-accent text-accent-foreground font-semibold tracking-wider shadow-[0_0_20px_hsl(45_80%_55%/0.3)] hover:shadow-[0_0_30px_hsl(45_80%_55%/0.5)] transition-all active:scale-95 animate-fade-in"
         >
-          もっと深く知る ✦
+          もっと深く知る
         </button>
       )}
     </div>

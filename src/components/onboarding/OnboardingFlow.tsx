@@ -84,24 +84,73 @@ const OnboardingFlow = () => {
         zodiac_sign: data.zodiacSign,
       } as any);
 
-      const { data: result, error } = await supabase.functions.invoke(
-        "generate-onboarding-reading",
-        {
-          body: {
-            birthDate: data.birthDate,
-            birthTime: data.birthTime || undefined,
-            birthLocation: data.birthLocation || undefined,
-            guidanceTopics: data.guidanceTopics,
-            displayName: data.displayName,
-            zodiacSign: data.zodiacSign,
-          },
-        }
-      );
+      let result: ReadingResult | null = null;
 
-      if (error) throw error;
+      // Try dedicated edge function first
+      try {
+        const { data: edgeResult, error } = await supabase.functions.invoke(
+          "generate-onboarding-reading",
+          {
+            body: {
+              birthDate: data.birthDate,
+              birthTime: data.birthTime || undefined,
+              birthLocation: data.birthLocation || undefined,
+              guidanceTopics: data.guidanceTopics,
+              displayName: data.displayName,
+              zodiacSign: data.zodiacSign,
+            },
+          }
+        );
+        if (!error && edgeResult?.summary) {
+          result = edgeResult;
+        }
+      } catch (edgeErr) {
+        console.warn("generate-onboarding-reading unavailable, using fallback:", edgeErr);
+      }
+
+      // Fallback: use fortune-chat edge function
+      if (!result) {
+        const topicLabels: Record<string, string> = {
+          love: "恋愛", career: "仕事", self: "自己理解",
+          health: "健康", future: "未来", money: "金運",
+        };
+        const topics = data.guidanceTopics.map((t) => topicLabels[t] || t).join("、");
+        const prompt = `以下の人物のパーソナリティを、占い用語を一切使わず、具体的な行動パターンの描写で3-4段落で分析してください。曖昧な表現は禁止。
+
+名前: ${data.displayName}
+生年月日: ${data.birthDate}
+星座: ${data.zodiacSign}
+${data.birthTime && data.birthTime !== "不明" ? `出生時間: ${data.birthTime}` : ""}
+${data.birthLocation && data.birthLocation !== "不明" ? `出生地: ${data.birthLocation}` : ""}
+関心分野: ${topics}
+
+回答形式: 「あなたは...」で始め、行動レベルの具体描写で語ってください。`;
+
+        const { data: chatResult, error: chatError } = await supabase.functions.invoke(
+          "fortune-chat",
+          {
+            body: {
+              messages: [{ role: "user", content: prompt }],
+              agentType: "default",
+              generateChoices: false,
+            },
+          }
+        );
+
+        if (chatError) throw chatError;
+
+        result = {
+          summary: chatResult?.content || "",
+          personalityTraits: [],
+          birthChartData: {
+            sunSign: data.zodiacSign,
+            element: "",
+            dominantTraits: [],
+          },
+        };
+      }
 
       setReadingResult(result);
-      // Move to reading reveal
       setStep(7);
     } catch (err) {
       console.error("Failed to generate reading:", err);
