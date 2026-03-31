@@ -2,6 +2,28 @@ import { useEffect, useState, useMemo } from "react";
 import { Agent } from "./AgentSelector";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
+// Convert Tailwind gradient class to CSS gradient value
+const gradientToCss = (gradient: string): string => {
+  const colorMap: Record<string, string> = {
+    "violet-600": "hsl(271 91% 65%)", "purple-600": "hsl(271 81% 56%)",
+    "indigo-700": "hsl(225 76% 52%)", "amber-500": "hsl(38 92% 50%)",
+    "yellow-500": "hsl(48 96% 53%)", "orange-500": "hsl(25 95% 53%)",
+    "rose-600": "hsl(347 77% 50%)", "red-600": "hsl(0 72% 51%)",
+    "pink-600": "hsl(333 71% 51%)", "cyan-500": "hsl(189 94% 43%)",
+    "teal-500": "hsl(168 76% 42%)", "emerald-500": "hsl(160 84% 39%)",
+  };
+  const parts = gradient.split(" ");
+  const colors: string[] = [];
+  for (const part of parts) {
+    const colorName = part.replace(/^(from-|via-|to-)/, "");
+    if (colorMap[colorName]) colors.push(colorMap[colorName]);
+  }
+  if (colors.length >= 3) return `linear-gradient(135deg, ${colors[0]}, ${colors[1]}, ${colors[2]})`;
+  if (colors.length === 2) return `linear-gradient(135deg, ${colors[0]}, ${colors[1]})`;
+  if (colors.length === 1) return colors[0];
+  return "linear-gradient(135deg, hsl(280 70% 50%), hsl(260 60% 40%))";
+};
+
 interface EnterRoomTransitionProps {
   agent: Agent;
   isVisible: boolean;
@@ -144,7 +166,7 @@ const EnterRoomTransition = ({
             <AvatarFallback
               className="text-6xl md:text-7xl lg:text-8xl"
               style={{
-                background: agent.gradient || "linear-gradient(135deg, hsl(280 70% 50%), hsl(260 60% 40%))",
+                background: gradientToCss(agent.gradient),
               }}
             >
               {agent.emoji}

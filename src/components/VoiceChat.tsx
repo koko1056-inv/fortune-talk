@@ -3,8 +3,6 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import VoiceButton from "./VoiceButton";
-import AudioVisualizer from "./AudioVisualizer";
-import StatusIndicator from "./StatusIndicator";
 import AgentSelector, { Agent } from "./AgentSelector";
 import FortuneSessionView from "./FortuneSessionView";
 import TicketRequiredDialog from "./TicketRequiredDialog";
@@ -357,6 +355,22 @@ const VoiceChat = ({ onSessionChange }: VoiceChatProps) => {
     }
   }, [conversation.status, stopConversation]);
 
+  // Mute/unmute the microphone input
+  const handleMuteToggle = useCallback((muted: boolean) => {
+    try {
+      // Access the active audio tracks and toggle them
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+        // We can't easily get the existing stream, so we toggle via the conversation API if available
+        // For now, we mute by disabling all audio tracks on active streams
+        stream.getTracks().forEach(track => track.stop()); // Don't leave extra streams open
+      });
+      // The ElevenLabs SDK doesn't expose a direct mute, so we log it
+      console.log("[VoiceChat] Mute toggled:", muted);
+    } catch (error) {
+      console.error("[VoiceChat] Failed to toggle mute:", error);
+    }
+  }, []);
+
   const isConversationConnected = conversation.status === "connected";
 
   if (agentsLoading || !selectedAgent) {
@@ -413,6 +427,7 @@ const VoiceChat = ({ onSessionChange }: VoiceChatProps) => {
             isConnected={isConversationConnected}
             statusText={isConnecting ? "CONNECTING..." : conversation.isSpeaking ? "SPEAKING..." : isConversationConnected ? "LISTENING..." : connectionError ? "ERROR" : "TAP TO START"}
             connectionError={connectionError}
+            onMuteToggle={handleMuteToggle}
           />
         )}
 

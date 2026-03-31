@@ -23,7 +23,30 @@ export interface FortuneSessionViewProps {
   isConnected?: boolean;
   statusText?: string;
   connectionError?: string | null;
+  onMuteToggle?: (muted: boolean) => void;
 }
+
+// Convert Tailwind gradient class to CSS gradient value
+const gradientToCss = (gradient: string): string => {
+  const colorMap: Record<string, string> = {
+    "violet-600": "hsl(271 91% 65%)", "purple-600": "hsl(271 81% 56%)",
+    "indigo-700": "hsl(225 76% 52%)", "amber-500": "hsl(38 92% 50%)",
+    "yellow-500": "hsl(48 96% 53%)", "orange-500": "hsl(25 95% 53%)",
+    "rose-600": "hsl(347 77% 50%)", "red-600": "hsl(0 72% 51%)",
+    "pink-600": "hsl(333 71% 51%)", "cyan-500": "hsl(189 94% 43%)",
+    "teal-500": "hsl(168 76% 42%)", "emerald-500": "hsl(160 84% 39%)",
+  };
+  const parts = gradient.split(" ");
+  const colors: string[] = [];
+  for (const part of parts) {
+    const colorName = part.replace(/^(from-|via-|to-)/, "");
+    if (colorMap[colorName]) colors.push(colorMap[colorName]);
+  }
+  if (colors.length >= 3) return `linear-gradient(135deg, ${colors[0]}, ${colors[1]}, ${colors[2]})`;
+  if (colors.length === 2) return `linear-gradient(135deg, ${colors[0]}, ${colors[1]})`;
+  if (colors.length === 1) return colors[0];
+  return "linear-gradient(135deg, hsl(280 70% 50%), hsl(260 60% 40%))";
+};
 
 const formatTime = (seconds: number) => {
   const mins = Math.floor(seconds / 60);
@@ -50,8 +73,15 @@ const FortuneSessionView = memo(({
   isConnected = false,
   statusText,
   connectionError,
+  onMuteToggle,
 }: FortuneSessionViewProps) => {
   const [isMuted, setIsMuted] = useState(false);
+
+  const handleMuteToggle = () => {
+    const newMuted = !isMuted;
+    setIsMuted(newMuted);
+    onMuteToggle?.(newMuted);
+  };
   const showTimer = elapsedSeconds !== undefined && maxSeconds !== undefined;
   const timeRemaining = showTimer ? maxSeconds - elapsedSeconds : 0;
   const isTimeWarning = showTimer && timeRemaining <= 30;
@@ -132,10 +162,10 @@ const FortuneSessionView = memo(({
               className="relative z-10 max-w-full max-h-full object-contain drop-shadow-2xl"
             />
           ) : (
-            <div 
+            <div
               className="relative z-10 w-40 h-40 rounded-full flex items-center justify-center text-7xl shrink-0"
               style={{
-                background: agent.gradient || "linear-gradient(135deg, hsl(280 70% 50%), hsl(260 60% 40%))",
+                background: gradientToCss(agent.gradient),
               }}
             >
               {agent.emoji}
@@ -188,7 +218,7 @@ const FortuneSessionView = memo(({
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setIsMuted(!isMuted)}
+            onClick={handleMuteToggle}
             className={cn(
               "h-12 w-12 rounded-full backdrop-blur-sm transition-colors",
               isMuted 
