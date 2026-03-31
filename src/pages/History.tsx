@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useAgentConfig } from "@/hooks/useAgentConfig";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Trash2, Clock, Calendar } from "lucide-react";
+import { Trash2, Clock, Calendar } from "lucide-react";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
 import { toast } from "sonner";
@@ -66,23 +66,13 @@ const History = () => {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
-      <div className="relative z-10 max-w-2xl mx-auto px-4 pt-16 pb-8">
+      <div className="relative z-10 max-w-2xl mx-auto px-4 pt-6 pb-24">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate("/")}
-            className="touch-target text-foreground hover:bg-accent/20"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-display font-bold text-foreground">
-              占い履歴
-            </h1>
-            <p className="text-xs text-muted-foreground mt-0.5">過去の鑑定記録</p>
-          </div>
+        <div className="mb-6">
+          <h1 className="text-2xl font-display font-bold text-foreground">
+            占い履歴
+          </h1>
+          <p className="text-xs text-muted-foreground mt-1">過去の鑑定記録</p>
         </div>
 
         {/* Content */}

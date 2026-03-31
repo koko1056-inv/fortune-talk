@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import StarField from "@/components/StarField";
-import { Loader2, User, Calendar, Droplets, Star, ArrowLeft, Save } from "lucide-react";
+import { Loader2, User, Calendar, Droplets, Star, Save } from "lucide-react";
 
 const BLOOD_TYPES = ["A", "B", "O", "AB"];
 
@@ -91,21 +91,13 @@ const Profile = () => {
     <div className="relative min-h-screen overflow-hidden">
       <StarField />
       
-      <div className="relative z-10 w-full max-w-lg mx-auto px-5 pt-16 pb-8 animate-fade-in">
+      <div className="relative z-10 w-full max-w-lg mx-auto px-5 pt-6 pb-24 animate-fade-in">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate("/")}
-              className="touch-target rounded-xl text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            <h1 className="text-2xl font-display font-bold text-foreground">プロフィール</h1>
-          </div>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-display font-bold text-foreground">マイページ</h1>
           <button
             onClick={handleSignOut}
-            className="text-sm text-muted-foreground hover:text-destructive transition-colors"
+            className="text-xs text-muted-foreground hover:text-destructive transition-colors px-3 py-1.5 rounded-full glass-surface"
           >
             ログアウト
           </button>

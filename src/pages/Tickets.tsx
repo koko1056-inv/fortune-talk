@@ -2,8 +2,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useBillingStatus } from '@/hooks/useBillingStatus';
 import { TicketPurchase } from '@/components/TicketPurchase';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, Sparkles, FileText } from 'lucide-react';
+import { Sparkles, FileText } from 'lucide-react';
 import StarField from '@/components/StarField';
 
 const Tickets = () => {
@@ -28,15 +27,10 @@ const Tickets = () => {
     <div className="min-h-screen bg-background relative overflow-hidden">
       <StarField />
 
-      <div className="relative z-10 container mx-auto px-4 pt-16 pb-8 max-w-2xl">
-        <div className="flex items-center gap-4 mb-8">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/')} className="touch-target">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-display font-bold text-gradient">占いチケット</h1>
-            <p className="text-xs text-muted-foreground">あなたの運命を紐解く鍵</p>
-          </div>
+      <div className="relative z-10 container mx-auto px-4 pt-6 pb-24 max-w-2xl">
+        <div className="mb-6">
+          <h1 className="text-2xl font-display font-bold text-foreground">プラン</h1>
+          <p className="text-xs text-muted-foreground mt-1">あなたの運命を紐解く鍵</p>
         </div>
 
         <TicketPurchase currentBalance={billingStatus.ticketBalance} />

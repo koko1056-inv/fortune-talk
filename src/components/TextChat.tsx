@@ -51,6 +51,7 @@ const TextChat = ({ onSessionChange }: TextChatProps) => {
     const inRoomMode = isConnected || isConnecting || showEnterAnimation;
     console.log("[TextChat] Session state:", { isConnected, isConnecting, showEnterAnimation, inRoomMode });
     onSessionChange?.(inRoomMode);
+    window.dispatchEvent(new Event(inRoomMode ? "fortune-session-start" : "fortune-session-end"));
   }, [isConnected, isConnecting, showEnterAnimation, onSessionChange]);
 
   useEffect(() => {

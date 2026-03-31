@@ -14,6 +14,7 @@ import ChatHistory from "./pages/ChatHistory";
 import CommercialTransaction from "./pages/CommercialTransaction";
 import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
+import BottomTabBar from "./components/BottomTabBar";
 
 const queryClient = new QueryClient();
 
@@ -24,18 +25,21 @@ const AppContent = () => {
   useDeepLinks();
 
   return (
-    <Routes>
-      <Route path="/" element={<Index />} />
-      <Route path="/onboarding" element={<Onboarding />} />
-      <Route path="/auth" element={<Auth />} />
-      <Route path="/profile" element={<Profile />} />
-      <Route path="/history" element={<History />} />
-      <Route path="/tickets" element={<Tickets />} />
-      <Route path="/commercial-transaction" element={<CommercialTransaction />} />
-      <Route path="/chat-history" element={<ChatHistory />} />
-      <Route path="/settings" element={<Settings />} />
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+    <>
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/onboarding" element={<Onboarding />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/history" element={<History />} />
+        <Route path="/tickets" element={<Tickets />} />
+        <Route path="/commercial-transaction" element={<CommercialTransaction />} />
+        <Route path="/chat-history" element={<ChatHistory />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+      <BottomTabBar />
+    </>
   );
 };
 

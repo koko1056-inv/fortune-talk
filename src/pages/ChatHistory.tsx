@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
-import { ArrowLeft, MessageCircle, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
+import { MessageCircle, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
@@ -158,15 +158,10 @@ const ChatHistory = () => {
     <div className="min-h-screen bg-background relative overflow-hidden">
       <StarField />
 
-      <div className="relative z-10 container mx-auto px-4 pt-16 pb-8 max-w-2xl">
-        <div className="flex items-center gap-4 mb-8">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="touch-target">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-display font-bold text-foreground">チャット履歴</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">テキストでの相談記録</p>
-          </div>
+      <div className="relative z-10 container mx-auto px-4 pt-6 pb-24 max-w-2xl">
+        <div className="mb-6">
+          <h1 className="text-2xl font-display font-bold text-foreground">チャット履歴</h1>
+          <p className="text-xs text-muted-foreground mt-1">テキストでの相談記録</p>
         </div>
 
         {(!sessions || sessions.length === 0) ? (

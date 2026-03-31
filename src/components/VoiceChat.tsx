@@ -55,11 +55,13 @@ const VoiceChat = ({ onSessionChange }: VoiceChatProps) => {
   const hasEverConnectedRef = useRef(false);
   const maxReconnectAttempts = 3;
 
-  // Notify parent of session state changes
+  // Notify parent and global UI of session state changes
   useEffect(() => {
     const inRoomMode = isInSession || showEnterAnimation || isConnecting;
     console.log("[VoiceChat] Session state:", { isInSession, showEnterAnimation, isConnecting, inRoomMode });
     onSessionChange?.(inRoomMode);
+    // Dispatch global event for BottomTabBar
+    window.dispatchEvent(new Event(inRoomMode ? "fortune-session-start" : "fortune-session-end"));
   }, [isInSession, showEnterAnimation, isConnecting, onSessionChange]);
 
   // Set initial selected agent when agents are loaded
