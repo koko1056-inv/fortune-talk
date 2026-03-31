@@ -34,8 +34,10 @@ const Index = () => {
   } = useProfile();
 
   // Redirect to onboarding if not completed
+  // onboarding_completed is explicitly false only when the column exists and is false
+  // If undefined (column not in DB yet), skip redirect to avoid loops
   useEffect(() => {
-    if (user && !profileLoading && profile && !profile.onboarding_completed) {
+    if (user && !profileLoading && profile && profile.onboarding_completed === false) {
       navigate("/onboarding");
     }
   }, [user, profile, profileLoading, navigate]);

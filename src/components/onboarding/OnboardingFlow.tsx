@@ -160,14 +160,31 @@ ${data.birthLocation && data.birthLocation !== "不明" ? `出生地: ${data.bir
     }
   }, [user, data, updateProfile]);
 
-  const handleComplete = useCallback(() => {
-    navigate("/");
-  }, [navigate]);
+  const markOnboardingComplete = useCallback(async () => {
+    try {
+      await updateProfile({
+        birth_time: data.birthTime || null,
+        birth_location: data.birthLocation || null,
+        guidance_topics: data.guidanceTopics.length > 0 ? data.guidanceTopics : null,
+        personality_summary: readingResult?.summary || null,
+        onboarding_completed: true,
+      } as any);
+    } catch (err) {
+      console.warn("Failed to update onboarding_completed, proceeding anyway:", err);
+      // Even if the column doesn't exist yet (migration not applied),
+      // we still navigate — worst case they see onboarding again
+    }
+  }, [updateProfile, data, readingResult]);
 
-  const handleGoToPaywall = useCallback(() => {
-    // Navigate to paywall (can be changed to show inline paywall)
+  const handleComplete = useCallback(async () => {
+    await markOnboardingComplete();
+    navigate("/");
+  }, [markOnboardingComplete, navigate]);
+
+  const handleGoToPaywall = useCallback(async () => {
+    await markOnboardingComplete();
     navigate("/?showPaywall=true");
-  }, [navigate]);
+  }, [markOnboardingComplete, navigate]);
 
   const progress = step / (TOTAL_STEPS - 1);
 
