@@ -38,7 +38,7 @@ const OnboardingReading = ({ result, zodiacSign, displayName, onNext }: Props) =
     .filter((p) => p.trim().length > 0);
 
   useEffect(() => {
-    const timers: NodeJS.Timeout[] = [];
+    const timers: ReturnType<typeof setTimeout>[] = [];
     paragraphs.forEach((_, i) => {
       timers.push(setTimeout(() => setRevealedParagraphs(i + 1), 800 + i * 1500));
     });
