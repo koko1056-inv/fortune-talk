@@ -48,7 +48,7 @@ const VoiceChat = ({ onSessionChange }: VoiceChatProps) => {
   const currentAgentRef = useRef<Agent | null>(null);
   const isFreeReadingRef = useRef(false);
   const reconnectAttemptRef = useRef(0);
-  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const userRequestedEndRef = useRef(false);
   const hasEverConnectedRef = useRef(false);
   const maxReconnectAttempts = 3;

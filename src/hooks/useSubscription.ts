@@ -27,22 +27,9 @@ export const useSubscription = () => {
     queryFn: async (): Promise<SubscriptionStatus> => {
       if (!user) return defaultStatus;
 
-      const { data, error } = await supabase.rpc("get_subscription_status", {
-        _user_id: user.id,
-      });
-
-      if (error) {
-        console.error("Failed to get subscription status:", error);
-        return defaultStatus;
-      }
-
-      return {
-        isPremium: data?.isPremium ?? false,
-        planType: data?.planType ?? "free",
-        status: data?.status ?? "none",
-        trialEnd: data?.trialEnd ?? null,
-        currentPeriodEnd: data?.currentPeriodEnd ?? null,
-      };
+      // TODO: Implement subscription table query when Stripe is set up
+      // For now, return default (free) status
+      return defaultStatus;
     },
     enabled: !!user,
     staleTime: 60 * 1000, // 1 minute
